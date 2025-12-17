@@ -45,7 +45,7 @@ const vendorSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
-    resturant_image: {
+    vendor_image: {
       type: String,
       default: '',
     },

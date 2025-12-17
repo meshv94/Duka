@@ -1,13 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const vendorController = require('../../controllers/admin/vendorController');
-const upload = require('../../middleware/upload'); // Assuming you have an upload middleware
+const { upload } = require('../../middlewares/uploadMiddleware');
 
 // CRUD Operations
 
 // Create a new vendor
-// Single image upload
-router.post('/vendors', upload.single('resturant_image'), vendorController.createVendor);
+router.post('/vendors', upload.single('vendor_image'), vendorController.createVendor);
 
 // Get all vendors
 router.get('/vendors', vendorController.getAllVendors);
@@ -22,9 +21,17 @@ router.get('/vendors/module/:moduleId', vendorController.getVendorsByModule);
 router.get('/vendors/:id', vendorController.getVendorById);
 
 // Update vendor
-router.put('/vendors/:id', upload.single('resturant_image'),vendorController.updateVendor);
+// Update vendor
+router.put('/vendors/:id', upload.single('vendor_image'), vendorController.updateVendor);
 
 // Delete vendor
 router.delete('/vendors/:id', vendorController.deleteVendor);
+
+// Product routes (admin)
+router.post('/products', upload.single('image'), vendorController.createProduct);
+router.get('/products', vendorController.getProducts);
+router.get('/products/:id', vendorController.getProductById);
+router.put('/products/:id', upload.single('image'), vendorController.updateProduct);
+router.delete('/products/:id', vendorController.deleteProduct);
 
 module.exports = router;
