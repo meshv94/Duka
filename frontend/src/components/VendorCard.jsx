@@ -205,10 +205,10 @@ const VendorCard = ({ vendor }) => {
             gap: 0.75,
           }}
         >
-          {vendor.deliveryCharge !== undefined && (
+          {/* {vendor.delivery_charge !== undefined && (
             <Chip
               icon={<DeliveryDiningIcon sx={{ fontSize: '1rem !important' }} />}
-              label={`$${vendor.deliveryCharge.toFixed(2)}`}
+              label={`$${vendor.delivery_charge.toFixed(2)}`}
               size="small"
               variant="filled"
               sx={{
@@ -218,7 +218,7 @@ const VendorCard = ({ vendor }) => {
                 height: 28,
               }}
             />
-          )}
+          )} */}
 
           {vendor.deliveryTime && (
             <Chip

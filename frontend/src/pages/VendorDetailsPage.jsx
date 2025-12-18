@@ -26,7 +26,6 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import useVendorDetails from '../hooks/useVendorDetails';
 import VendorHeader from '../components/VendorHeader';
-import VendorMetaBar from '../components/VendorMetaBar';
 import ProductCard from '../components/ProductCard';
 import FloatingCartButton from '../components/FloatingCartButton';
 
@@ -282,9 +281,6 @@ const VendorDetailsPage = () => {
     <Box sx={{ backgroundColor: '#fafafa', minHeight: '100vh', position: 'relative' }}>
       {/* Vendor Header with Banner */}
       <VendorHeader vendor={vendor} />
-
-      {/* Vendor Meta Info Bar (sticky) */}
-      <VendorMetaBar vendor={vendor} />
 
       {/* Main Content Area */}
       <Container maxWidth="lg" sx={{ py: 4 }}>

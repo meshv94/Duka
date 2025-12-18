@@ -181,7 +181,7 @@ const VendorListPage = () => {
         </Box>
 
         {/* Filter Section */}
-        <Container maxWidth="lg" sx={{ mb: 4 }}>
+        {/* <Container maxWidth="lg" sx={{ mb: 4 }}>
           <Fade in timeout={600}>
             <Paper
               elevation={0}
@@ -255,7 +255,7 @@ const VendorListPage = () => {
               </Stack>
             </Paper>
           </Fade>
-        </Container>
+        </Container> */}
 
         <Container maxWidth="lg" sx={{ pb: 6 }}>
           {/* Error State */}
@@ -387,11 +387,11 @@ const VendorListPage = () => {
                           mb: 0.5,
                         }}
                       >
-                        {selectedFilter === 'all'
+                        {/* {selectedFilter === 'all'
                           ? 'Available Now'
                           : selectedFilter === 'open'
                           ? 'Open Vendors'
-                          : 'Free Delivery'}
+                          : 'Free Delivery'} */}
                       </Typography>
                       <Typography
                         variant="body2"

@@ -146,7 +146,7 @@ const Layout = ({ children }) => {
             }}
           >
             {/* Logo Section */}
-            <Box
+            {/* <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -186,10 +186,10 @@ const Layout = ({ children }) => {
               >
                 DeliveryApp
               </Typography>
-            </Box>
+            </Box> */}
 
             {/* Tagline */}
-            <Typography
+            {/* <Typography
               variant="body2"
               sx={{
                 color: '#666',
@@ -200,7 +200,7 @@ const Layout = ({ children }) => {
               }}
             >
               Fast, reliable delivery from local vendors. Your favorite meals and products, delivered to your door.
-            </Typography>
+            </Typography> */}
 
             {/* Divider */}
             <Box
@@ -247,7 +247,7 @@ const Layout = ({ children }) => {
                   },
                 }}
               />
-              <Typography
+              {/* <Typography
                 variant="body2"
                 sx={{
                   color: '#888',
@@ -255,7 +255,7 @@ const Layout = ({ children }) => {
                 }}
               >
                 for food lovers
-              </Typography>
+              </Typography> */}
             </Stack>
           </Stack>
         </Container>

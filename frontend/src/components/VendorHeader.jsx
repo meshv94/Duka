@@ -18,6 +18,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CallIcon from '@mui/icons-material/Call';
 import ShareIcon from '@mui/icons-material/Share';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 
 /**
  * VendorHeader Component
@@ -76,6 +79,53 @@ const VendorHeader = ({ vendor }) => {
     setShowShareSnackbar(true);
   };
 
+  // Build meta items array for vendor charges and info
+  const metaItems = [];
+
+  // Delivery Charge
+  // if (vendor.delivery_charge !== undefined && vendor.delivery_charge !== null) {
+  //   metaItems.push({
+  //     id: 'delivery',
+  //     icon: <DeliveryDiningIcon sx={{ fontSize: '1.1rem' }} />,
+  //     label: 'Delivery Charge',
+  //     value: `INR ${vendor.delivery_charge.toFixed(2)}`,
+  //     color: '#ff9800',
+  //   });
+  // }
+
+  // // Packaging Charge
+  // if (vendor.packaging_charge !== undefined && vendor.packaging_charge !== null) {
+  //   metaItems.push({
+  //     id: 'packaging',
+  //     icon: <LocalShippingIcon sx={{ fontSize: '1.1rem' }} />,
+  //     label: 'Packaging Charge',
+  //     value: `INR ${vendor.packaging_charge.toFixed(2)}`,
+  //     color: '#2196f3',
+  //   });
+  // }
+
+  // // Convenience Charge
+  // if (vendor.convenience_charge !== undefined && vendor.convenience_charge !== null) {
+  //   metaItems.push({
+  //     id: 'convenience',
+  //     icon: <LocalOfferIcon sx={{ fontSize: '1.1rem' }} />,
+  //     label: 'Convenience Charge',
+  //     value: `INR ${vendor.convenience_charge.toFixed(2)}`,
+  //     color: '#9c27b0',
+  //   });
+  // }
+
+  // // Preparation Time
+  // if (vendor.preparation_time_minutes !== undefined && vendor.preparation_time_minutes !== null) {
+  //   metaItems.push({
+  //     id: 'prep',
+  //     icon: <AccessTimeIcon sx={{ fontSize: '1.1rem' }} />,
+  //     label: 'Est. Prep Time',
+  //     value: `${vendor.preparation_time_minutes} min`,
+  //     color: '#4caf50',
+  //   });
+  // }
+
   return (
     <>
       {/* Back Button - Fixed at top */}
@@ -106,7 +156,7 @@ const VendorHeader = ({ vendor }) => {
       </Box>
 
       {/* Banner Section */}
-      <Box
+      {/* <Box
         sx={{
           width: '100%',
           height: { xs: 200, sm: 280, md: 320 },
@@ -117,7 +167,6 @@ const VendorHeader = ({ vendor }) => {
             : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         }}
       >
-        {/* Background Image or Pattern */}
         {hasBanner ? (
           <Box
             component="img"
@@ -132,7 +181,6 @@ const VendorHeader = ({ vendor }) => {
             }}
           />
         ) : (
-          /* Fallback Pattern Design */
           <Box
             sx={{
               width: '100%',
@@ -167,7 +215,6 @@ const VendorHeader = ({ vendor }) => {
               },
             }}
           >
-            {/* Centered Store Icon for fallback */}
             <Box
               sx={{
                 position: 'absolute',
@@ -188,7 +235,6 @@ const VendorHeader = ({ vendor }) => {
           </Box>
         )}
 
-        {/* Overlay */}
         <Box
           sx={{
             position: 'absolute',
@@ -202,7 +248,7 @@ const VendorHeader = ({ vendor }) => {
             zIndex: 1,
           }}
         />
-      </Box>
+      </Box> */}
 
       {/* Vendor Info Section */}
       <Box
@@ -237,7 +283,7 @@ const VendorHeader = ({ vendor }) => {
             </Box>
 
             {/* Status Badge */}
-            <Chip
+            {/* <Chip
               label={isOpen ? 'Open' : 'Closed'}
               color={isOpen ? 'success' : 'error'}
               variant="filled"
@@ -247,7 +293,7 @@ const VendorHeader = ({ vendor }) => {
                 height: { xs: 28, sm: 32 },
                 minWidth: { xs: 70, sm: 80 },
               }}
-            />
+            /> */}
           </Stack>
 
           {/* Description */}
@@ -260,6 +306,8 @@ const VendorHeader = ({ vendor }) => {
                 mb: 3,
                 maxWidth: { xs: '100%', sm: '85%', md: '80%' },
                 fontSize: { xs: '0.875rem', sm: '0.9rem' },
+                textAlign: 'center',
+                mx: 'auto'
               }}
             >
               {vendor.description}
@@ -272,17 +320,19 @@ const VendorHeader = ({ vendor }) => {
             spacing={{ xs: 2, sm: 3 }}
             sx={{
               mb: 3,
-              flexWrap: 'wrap',
+              justifyContent: 'center',
+              alignItems: { xs: 'stretch', sm: 'center' },
             }}
           >
             {/* Open Time */}
-            {vendor.open_time && vendor.close_time && (
+            {/* {vendor.open_time && vendor.close_time && (
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1,
                   minHeight: 48,
+                  width: { xs: '100%', sm: 'auto' },
                 }}
               >
                 <AccessTimeIcon
@@ -318,7 +368,7 @@ const VendorHeader = ({ vendor }) => {
                   </Typography>
                 </Box>
               </Box>
-            )}
+            )} */}
 
             {/* Location */}
             <Box
@@ -327,7 +377,8 @@ const VendorHeader = ({ vendor }) => {
                 alignItems: 'center',
                 gap: 1,
                 minHeight: 48,
-                flex: 1,
+                width: { xs: '100%', sm: 'auto' },
+                maxWidth: { sm: 300 },
               }}
             >
               <LocationOnIcon
@@ -346,7 +397,7 @@ const VendorHeader = ({ vendor }) => {
                   minWidth: 0,
                 }}
               >
-                <Typography
+                {/* <Typography
                   variant="caption"
                   sx={{
                     color: '#999',
@@ -357,7 +408,7 @@ const VendorHeader = ({ vendor }) => {
                   }}
                 >
                   Location
-                </Typography>
+                </Typography> */}
                 <Typography
                   variant="body2"
                   sx={{
@@ -436,6 +487,125 @@ const VendorHeader = ({ vendor }) => {
           </Stack>
         </Container>
       </Box>
+
+      {/* Vendor Meta Bar - Charges and Info */}
+      {metaItems.length > 0 && (
+        <Box
+          sx={{
+            backgroundColor: '#fff',
+            borderBottom: '1px solid #e8e8e8',
+            py: { xs: 1.5, sm: 2 },
+            position: 'sticky',
+            top: { xs: 56, sm: 64 },
+            zIndex: 50,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <Container maxWidth="lg">
+            <Stack
+              direction="row"
+              spacing={{ xs: 1.5, sm: 2 }}
+              sx={{
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                pb: 0.5,
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#ddd transparent',
+                '&::-webkit-scrollbar': {
+                  height: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: 'transparent',
+                  borderRadius: '10px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: '#ddd',
+                  borderRadius: '10px',
+                  '&:hover': {
+                    backgroundColor: '#bbb',
+                  },
+                },
+              }}
+            >
+              {metaItems.map((item) => (
+                <Box
+                  key={item.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.25,
+                    backgroundColor: '#fafafa',
+                    border: '1px solid #f0f0f0',
+                    borderRadius: '16px',
+                    padding: { xs: '10px 14px', sm: '12px 16px' },
+                    minWidth: 'fit-content',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: '#fff',
+                      borderColor: item.color,
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 4px 12px ${item.color}20`,
+                    },
+                  }}
+                >
+                  {/* Icon with background */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: { xs: 36, sm: 40 },
+                      height: { xs: 36, sm: 40 },
+                      borderRadius: '12px',
+                      backgroundColor: `${item.color}15`,
+                      color: item.color,
+                      flexShrink: 0,
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    {React.cloneElement(item.icon, {
+                      sx: { fontSize: { xs: '1.2rem', sm: '1.35rem' } },
+                    })}
+                  </Box>
+
+                  {/* Text content */}
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: '#888',
+                        display: 'block',
+                        fontSize: { xs: '0.65rem', sm: '0.7rem' },
+                        fontWeight: 500,
+                        letterSpacing: '0.3px',
+                        textTransform: 'uppercase',
+                        lineHeight: 1.2,
+                        mb: 0.25,
+                      }}
+                    >
+                      {item.label}
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: '#1a1a1a',
+                        fontWeight: 700,
+                        fontSize: { xs: '0.9rem', sm: '0.95rem' },
+                        lineHeight: 1.3,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {item.value}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Stack>
+          </Container>
+        </Box>
+      )}
 
       {/* Share Snackbar */}
       <Snackbar

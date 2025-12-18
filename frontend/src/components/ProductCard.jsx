@@ -97,104 +97,47 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
   return (
     <Card
       sx={{
-        height: '100%',
+        width: '100%',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         borderRadius: 2,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+        boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         backgroundColor: '#fff',
         overflow: 'hidden',
+        border: '1px solid #f0f0f0',
+        height: 'auto',
         '&:hover': {
-          boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)',
-          transform: 'translateY(-4px)',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+          transform: 'translateY(-2px)',
+          borderColor: '#667eea',
         },
       }}
     >
-      {/* Product Image */}
-      <Box sx={{ position: 'relative', overflow: 'hidden' }}>
-        <CardMedia
-          component="img"
-          height="200"
-          image={product.productImage || product.image || FALLBACK_PRODUCT_IMAGE}
-          alt={product.name}
-          loading="lazy"
-          sx={{
-            objectFit: 'cover',
-            backgroundColor: '#f5f5f5',
-            transition: 'transform 0.3s ease-in-out',
-            '&:hover': {
-              transform: 'scale(1.05)',
-            },
-          }}
-        />
-
-        {/* Special Price Badge */}
-        {hasSpecialPrice && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              backgroundColor: '#FF6B6B',
-              color: '#fff',
-              padding: '4px 12px',
-              borderRadius: '20px',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
-            }}
-          >
-            Sale
-          </Box>
-        )}
-
-        {/* Cart Badge - Show quantity if already in cart */}
-        {cartQuantity > 0 && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 12,
-              left: 12,
-              backgroundColor: '#4CAF50',
-              color: '#fff',
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-            }}
-          >
-            {cartQuantity}
-          </Box>
-        )}
-      </Box>
-
-      {/* Content */}
+      {/* Content - Left Side */}
       <CardContent
         sx={{
-          flexGrow: 1,
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          padding: '14px',
-          gap: 1,
+          padding: '12px 14px',
+          gap: 0.5,
+          minWidth: 0,
         }}
       >
         {/* Product Name */}
         <Typography
           variant="subtitle1"
           sx={{
-            fontWeight: 600,
-            fontSize: '0.95rem',
+            fontWeight: 700,
+            fontSize: '0.9rem',
             lineHeight: 1.3,
             color: '#1a1a1a',
             display: '-webkit-box',
             WebkitLineClamp: 2,
             WebkitBoxOrient: 'vertical',
             overflow: 'hidden',
+            mb: 0.5,
           }}
         >
           {product.name}
@@ -205,12 +148,13 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
           <Typography
             variant="caption"
             sx={{
-              color: '#999',
-              fontSize: '0.8rem',
+              color: '#888',
+              fontSize: '0.75rem',
               display: '-webkit-box',
               WebkitLineClamp: 1,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
+              mb: 0.5,
             }}
           >
             {product.description}
@@ -218,80 +162,156 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
         )}
 
         {/* Price Section */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 'auto' }}>
+        <Box sx={{ display: 'flex', flexFlow: 'column', alignItems: 'center', gap: 1, mb: 0.5 }}>
           {hasSpecialPrice ? (
             <>
               <Typography
                 variant="body2"
                 sx={{
                   textDecoration: 'line-through',
-                  color: '#ccc',
+                  color: '#999',
                   fontWeight: 500,
-                  fontSize: '0.85rem',
+                  fontSize: '0.8rem',
                 }}
               >
-                ${mainPrice.toFixed(2)}
+                INR {mainPrice.toFixed(2)}
               </Typography>
               <Typography
                 variant="h6"
                 sx={{
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: '#FF6B6B',
-                  fontSize: '1.05rem',
+                  fontSize: '1rem',
                 }}
               >
-                ${specialPrice.toFixed(2)}
+                INR {specialPrice.toFixed(2)}
               </Typography>
             </>
           ) : (
             <Typography
               variant="h6"
               sx={{
-                fontWeight: 700,
+                fontWeight: 800,
                 color: '#667eea',
-                fontSize: '1.05rem',
+                fontSize: '1rem',
               }}
             >
-              ${mainPrice.toFixed(2)}
+              INR {mainPrice.toFixed(2)}
             </Typography>
           )}
         </Box>
 
-        {/* Preparation Time */}
-        {product.preparationTime && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <TimerIcon sx={{ fontSize: '1rem', color: '#ff9800' }} />
-            <Typography variant="caption" sx={{ color: '#666', fontWeight: 500 }}>
-              {product.preparationTime} min
-            </Typography>
-          </Box>
-        )}
+        {/* Preparation Time & Cart Badge */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {product.preparation_time_min && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <TimerIcon sx={{ fontSize: '0.9rem', color: '#ff9800' }} />
+              <Typography variant="caption" sx={{ color: '#666', fontWeight: 500, fontSize: '0.7rem' }}>
+                {product.preparation_time_min} min
+              </Typography>
+            </Box>
+          )}
+          {cartQuantity > 0 && (
+            <Chip
+              label={`${cartQuantity} in cart`}
+              size="small"
+              sx={{
+                backgroundColor: '#4CAF50',
+                color: '#fff',
+                height: 20,
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                '& .MuiChip-label': { px: 1 },
+              }}
+            />
+          )}
+        </Box>
+      </CardContent>
 
-        {/* Add Button */}
+      {/* Product Image with Button - Right Side */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          flexShrink: 0,
+        }}
+      >
+        {/* Image */}
+        <Box
+          sx={{
+            position: 'relative',
+            width: 120,
+            height: 120,
+            overflow: 'hidden',
+          }}
+        >
+          <CardMedia
+            component="img"
+            image={product.productImage || product.image || FALLBACK_PRODUCT_IMAGE}
+            alt={product.name}
+            loading="lazy"
+            sx={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              backgroundColor: '#f5f5f5',
+              transition: 'transform 0.3s ease-in-out',
+              '&:hover': {
+                transform: 'scale(1.1)',
+              },
+            }}
+          />
+
+          {/* Special Price Badge - Top of Image */}
+          {hasSpecialPrice && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 6,
+                left: 6,
+                right: 6,
+                backgroundColor: '#FF6B6B',
+                color: '#fff',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                fontSize: '0.65rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                textAlign: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              }}
+            >
+              Sale
+            </Box>
+          )}
+        </Box>
+
+        {/* Add Button - Below Image */}
         <Button
           variant="contained"
           size="small"
           fullWidth
-          startIcon={<AddIcon />}
+          startIcon={<AddIcon sx={{ fontSize: '0.85rem' }} />}
           onClick={handleAddClick}
           sx={{
-            mt: 1.5,
-            backgroundColor: '#667eea',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: '#fff',
-            fontWeight: 600,
+            fontWeight: 700,
             textTransform: 'none',
-            borderRadius: '6px',
-            padding: '8px 12px',
+            borderRadius: 0,
+            padding: '6px 8px',
+            fontSize: '0.7rem',
+            boxShadow: 'none',
+            minHeight: 'auto',
             transition: 'all 0.3s ease',
             '&:hover': {
-              backgroundColor: '#5568d3',
-              boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
+              background: 'linear-gradient(135deg, #5568d3 0%, #6a3d8f 100%)',
             },
           }}
         >
-          Add to Cart
+          Add
         </Button>
-      </CardContent>
+      </Box>
 
       {/* Add to Cart Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="xs" fullWidth>
@@ -301,11 +321,11 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
         <DialogContent sx={{ pt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              Price: <strong>${displayPrice.toFixed(2)}</strong>
+              Price: <strong>INR {displayPrice.toFixed(2)}</strong>
             </Typography>
             {hasSpecialPrice && (
               <Typography variant="caption" sx={{ color: '#FF6B6B' }}>
-                Save ${(mainPrice - specialPrice).toFixed(2)}
+                Save INR {(mainPrice - specialPrice).toFixed(2)}
               </Typography>
             )}
           </Box>
