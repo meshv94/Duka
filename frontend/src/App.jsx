@@ -2,8 +2,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import './App.css';
 import Layout from './components/Layout';
+import { CartProvider } from './context/CartContext';
 import VendorListPage from './pages/VendorListPage';
 import VendorDetailsPage from './pages/VendorDetailsPage';
+import CartPage from './pages/CartPage';
 
 // Create Material UI theme with modern, trustworthy colors
 const theme = createTheme({
@@ -123,17 +125,23 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Layout>
-          <Routes>
-            {/* Vendor Listing */}
-            <Route path="/" element={<VendorListPage />} />
-            
-            {/* Vendor Details */}
-            <Route path="/vendors/:vendorId" element={<VendorDetailsPage />} />
-          </Routes>
-        </Layout>
-      </Router>
+      <CartProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              {/* Home - Vendor Listing */}
+              <Route path="/" element={<VendorListPage />} />
+              <Route path="/vendors" element={<VendorListPage />} />
+              
+              {/* Vendor Details & Products */}
+              <Route path="/vendors/:vendorId" element={<VendorDetailsPage />} />
+              
+              {/* Cart */}
+              <Route path="/cart" element={<CartPage />} />
+            </Routes>
+          </Layout>
+        </Router>
+      </CartProvider>
     </ThemeProvider>
   );
 }

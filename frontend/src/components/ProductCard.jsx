@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -8,9 +8,19 @@ import {
   Button,
   Chip,
   Stack,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import TimerIcon from '@mui/icons-material/Timer';
+import { useCartContext } from '../context/CartContext';
 
 // Fallback product image
 const FALLBACK_PRODUCT_IMAGE =
@@ -18,28 +28,71 @@ const FALLBACK_PRODUCT_IMAGE =
 
 /**
  * ProductCard Component
- * Displays individual product information with add button
+ * Displays individual product information with add to cart button
+ * Allows quantity selection before adding to cart
  *
  * @param {object} product - Product data object
- * @param {function} onAddClick - Callback when add button is clicked
+ * @param {string} vendorId - Vendor ID for the product
+ * @param {function} onAddClick - Optional callback when add button is clicked
  */
-const ProductCard = ({ product, onAddClick }) => {
+const ProductCard = ({ product, vendorId, onAddClick }) => {
+  const { addToCart, getProductQuantity } = useCartContext();
+  const [quantity, setQuantity] = useState(1);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', type: 'success' });
+
+  const cartQuantity = getProductQuantity(vendorId, product._id);
+
   const handleAddClick = (e) => {
     e.stopPropagation();
-    if (onAddClick) {
-      onAddClick(product);
+    setQuantity(1);
+    setOpenDialog(true);
+  };
+
+  const handleAddToCart = () => {
+    try {
+      addToCart(vendorId, product, quantity);
+      setOpenDialog(false);
+      setSnackbar({
+        open: true,
+        message: `${quantity} item${quantity > 1 ? 's' : ''} added to cart!`,
+        type: 'success',
+      });
+
+      // Call optional callback
+      if (onAddClick) {
+        onAddClick(product);
+      }
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message: 'Failed to add to cart',
+        type: 'error',
+      });
     }
   };
 
-  // Format price with proper decimal places
-  const formatPrice = (price) => {
-    if (typeof price !== 'number') return '$0.00';
-    return `$${price.toFixed(2)}`;
+  const handleQuantityChange = (e) => {
+    const value = Math.max(1, parseInt(e.target.value) || 1);
+    setQuantity(value);
   };
+
+  const incrementQuantity = () => setQuantity((q) => q + 1);
+  const decrementQuantity = () => setQuantity((q) => (q > 1 ? q - 1 : 1));
 
   // Check if product has special price
   const hasSpecialPrice =
-    product.specialPrice && product.specialPrice < product.price;
+    product.special_price && product.special_price < product.main_price;
+
+  // Use correct price fields
+  const mainPrice = product.main_price || product.price || 0;
+  const specialPrice = product.special_price || 0;
+
+  const displayPrice = hasSpecialPrice ? specialPrice : mainPrice;
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
 
   return (
     <Card
@@ -93,6 +146,29 @@ const ProductCard = ({ product, onAddClick }) => {
             }}
           >
             Sale
+          </Box>
+        )}
+
+        {/* Cart Badge - Show quantity if already in cart */}
+        {cartQuantity > 0 && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 12,
+              left: 12,
+              backgroundColor: '#4CAF50',
+              color: '#fff',
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+            }}
+          >
+            {cartQuantity}
           </Box>
         )}
       </Box>
@@ -154,7 +230,7 @@ const ProductCard = ({ product, onAddClick }) => {
                   fontSize: '0.85rem',
                 }}
               >
-                {formatPrice(product.price)}
+                ${mainPrice.toFixed(2)}
               </Typography>
               <Typography
                 variant="h6"
@@ -164,7 +240,7 @@ const ProductCard = ({ product, onAddClick }) => {
                   fontSize: '1.05rem',
                 }}
               >
-                {formatPrice(product.specialPrice)}
+                ${specialPrice.toFixed(2)}
               </Typography>
             </>
           ) : (
@@ -176,7 +252,7 @@ const ProductCard = ({ product, onAddClick }) => {
                 fontSize: '1.05rem',
               }}
             >
-              {formatPrice(product.price)}
+              ${mainPrice.toFixed(2)}
             </Typography>
           )}
         </Box>
@@ -216,6 +292,76 @@ const ProductCard = ({ product, onAddClick }) => {
           Add to Cart
         </Button>
       </CardContent>
+
+      {/* Add to Cart Dialog */}
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: '1.1rem' }}>
+          {product.name}
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Box>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+              Price: <strong>${displayPrice.toFixed(2)}</strong>
+            </Typography>
+            {hasSpecialPrice && (
+              <Typography variant="caption" sx={{ color: '#FF6B6B' }}>
+                Save ${(mainPrice - specialPrice).toFixed(2)}
+              </Typography>
+            )}
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Typography variant="body2">Quantity:</Typography>
+            <IconButton size="small" onClick={decrementQuantity} disabled={quantity === 1}>
+              <RemoveIcon />
+            </IconButton>
+            <TextField
+              type="number"
+              size="small"
+              value={quantity}
+              onChange={handleQuantityChange}
+              inputProps={{ min: 1, max: 100, style: { textAlign: 'center', width: '50px' } }}
+            />
+            <IconButton size="small" onClick={incrementQuantity}>
+              <AddIcon />
+            </IconButton>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setOpenDialog(false)} variant="outlined">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddToCart}
+            variant="contained"
+            sx={{
+              backgroundColor: '#667eea',
+              '&:hover': {
+                backgroundColor: '#5568d3',
+              },
+            }}
+          >
+            Add to Cart
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity={snackbar.type}
+          variant="filled"
+          sx={{ width: '100%' }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Card>
   );
 };

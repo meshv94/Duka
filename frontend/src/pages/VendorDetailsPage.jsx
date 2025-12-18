@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Container,
@@ -16,6 +16,7 @@ import useVendorDetails from '../hooks/useVendorDetails';
 import VendorHeader from '../components/VendorHeader';
 import VendorMetaBar from '../components/VendorMetaBar';
 import ProductCard from '../components/ProductCard';
+import FloatingCartButton from '../components/FloatingCartButton';
 
 /**
  * VendorDetailsPage
@@ -24,29 +25,6 @@ import ProductCard from '../components/ProductCard';
 const VendorDetailsPage = () => {
   const { vendorId } = useParams();
   const { vendor, products, loading, error } = useVendorDetails(vendorId);
-  const [addedProducts, setAddedProducts] = useState(new Set());
-
-  /**
-   * Handle Add to Cart
-   */
-  const handleAddToCart = (product) => {
-    // For now, just show visual feedback
-    // TODO: Integrate with cart management later
-    setAddedProducts((prev) => {
-      const updated = new Set(prev);
-      updated.add(product._id || product.id);
-      return updated;
-    });
-
-    // Reset after 2 seconds
-    setTimeout(() => {
-      setAddedProducts((prev) => {
-        const updated = new Set(prev);
-        updated.delete(product._id || product.id);
-        return updated;
-      });
-    }, 2000);
-  };
 
   // Loading State
   if (loading) {
@@ -265,7 +243,7 @@ const VendorDetailsPage = () => {
                   >
                     <ProductCard
                       product={product}
-                      onAddClick={handleAddToCart}
+                      vendorId={vendorId}
                     />
                   </Grid>
                 ))}
@@ -277,6 +255,9 @@ const VendorDetailsPage = () => {
 
       {/* Bottom Spacing */}
       <Box sx={{ py: 4 }} />
+
+      {/* Floating Cart Button */}
+      <FloatingCartButton />
     </Box>
   );
 };

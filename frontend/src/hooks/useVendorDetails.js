@@ -27,7 +27,7 @@ const useVendorDetails = (vendorId) => {
         setError(null);
 
         // Get token from localStorage
-        const token = localStorage.getItem('authToken') || 'http://localhost:5000/api';
+        const token = localStorage.getItem('token') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTQyZjFkMmI1MGU5MGMzMjhmZTdhNGYiLCJ0aW1lc3RhbXAiOjE3NjYwNzQwODgzNDUsImlhdCI6MTc2NjA3NDA4OCwiZXhwIjoxNzY2Njc4ODg4fQ.pWoXjQA9k2jYk8Uf0SbuLVOXXD6yWWm4ekSXTATkrp8';
 
         // Call API
         const response = await axios.get(

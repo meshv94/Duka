@@ -1,10 +1,14 @@
 import React from 'react';
-import { Box, AppBar, Toolbar, Typography, Container } from '@mui/material';
+import { Box, AppBar, Toolbar, Typography, Container, IconButton, Badge } from '@mui/material';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { useNavigate } from 'react-router-dom';
+import { useCartContext } from '../context/CartContext';
 
 const Layout = ({ children }) => {
   const navigate = useNavigate();
+  const { getCartTotals } = useCartContext();
+  const { totalItems } = getCartTotals();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
@@ -37,6 +41,23 @@ const Layout = ({ children }) => {
           >
             DeliveryApp
           </Typography>
+          
+          {/* Cart Button with Badge */}
+          <IconButton
+            color="inherit"
+            onClick={() => navigate('/cart')}
+            sx={{
+              mr: 1,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+              },
+            }}
+          >
+            <Badge badgeContent={totalItems} color="error" overlap="circular">
+              <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
         </Toolbar>
       </AppBar>
 
