@@ -30,10 +30,12 @@ apiClient.interceptors.response.use(
     return response.data;
   },
   (error) => {
+    console.log('API Error:', error.response);
     if (error.response?.status === 401) {
       // Clear token and redirect to login
       localStorage.removeItem('authToken');
-      // window.location.href = '/login';
+      localStorage.removeItem('userData');
+      window.location.href = '/login';
     }
     return Promise.reject(error.response?.data || error.message);
   }

@@ -27,7 +27,7 @@ const useVendorDetails = (vendorId) => {
         setError(null);
 
         // Get token from localStorage
-        const token = localStorage.getItem('token') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTQyZjFkMmI1MGU5MGMzMjhmZTdhNGYiLCJ0aW1lc3RhbXAiOjE3NjYwNzQwODgzNDUsImlhdCI6MTc2NjA3NDA4OCwiZXhwIjoxNzY2Njc4ODg4fQ.pWoXjQA9k2jYk8Uf0SbuLVOXXD6yWWm4ekSXTATkrp8';
+        const token = localStorage.getItem('authToken')
 
         // Call API
         const response = await axios.get(
@@ -54,6 +54,12 @@ const useVendorDetails = (vendorId) => {
         }
       } catch (err) {
         console.error('Error fetching vendor details:', err);
+        if(err.response?.status == 401) {
+            // Clear token and redirect to login
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userData');
+            window.location.href = '/login';
+          }
         const message =
           err.response?.data?.message ||
           err.message ||

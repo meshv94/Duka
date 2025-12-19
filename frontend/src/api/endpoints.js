@@ -2,11 +2,11 @@ import apiClient from './apiClient';
 
 // User API calls
 export const userAPI = {
-  register: (userData) => apiClient.post('/users/register', userData),
-  login: (credentials) => apiClient.post('/users/login', credentials),
-  getProfile: () => apiClient.get('/users/profile'),
-  updateProfile: (userData) => apiClient.put('/users/profile', userData),
-  logout: () => apiClient.post('/users/logout'),
+  sendOtp: (data) => apiClient.post('/app/auth/send-otp', data),
+  verifyOtp: (data) => apiClient.post('/app/auth/verify-otp', data),
+  getProfile: () => apiClient.get('/app/profile'),
+  updateProfile: (userData) => apiClient.put('/app/profile/update', userData),
+  logout: () => apiClient.post('/app/auth/logout'),
 };
 
 // Vendor API calls

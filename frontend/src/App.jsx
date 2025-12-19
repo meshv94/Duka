@@ -6,6 +6,7 @@ import { CartProvider } from './context/CartContext';
 import VendorListPage from './pages/VendorListPage';
 import VendorDetailsPage from './pages/VendorDetailsPage';
 import CartPage from './pages/CartPage';
+import LoginPage from './pages/LoginPage';
 
 // Create Material UI theme with modern, trustworthy colors
 const theme = createTheme({
@@ -127,19 +128,27 @@ function App() {
       <CssBaseline />
       <CartProvider>
         <Router>
-          <Layout>
-            <Routes>
-              {/* Home - Vendor Listing */}
-              <Route path="/" element={<VendorListPage />} />
-              <Route path="/vendors" element={<VendorListPage />} />
-              
-              {/* Vendor Details & Products */}
-              <Route path="/vendors/:vendorId" element={<VendorDetailsPage />} />
-              
-              {/* Cart */}
-              <Route path="/cart" element={<CartPage />} />
-            </Routes>
-          </Layout>
+          <Routes>
+            {/* Login/Register Page (without Layout) */}
+            <Route path="/login" element={<LoginPage />} />
+
+            {/* All other pages with Layout */}
+            <Route path="*" element={
+              <Layout>
+                <Routes>
+                  {/* Home - Vendor Listing */}
+                  <Route path="/" element={<VendorListPage />} />
+                  <Route path="/vendors" element={<VendorListPage />} />
+
+                  {/* Vendor Details & Products */}
+                  <Route path="/vendors/:vendorId" element={<VendorDetailsPage />} />
+
+                  {/* Cart */}
+                  <Route path="/cart" element={<CartPage />} />
+                </Routes>
+              </Layout>
+            } />
+          </Routes>
         </Router>
       </CartProvider>
     </ThemeProvider>
