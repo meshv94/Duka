@@ -88,7 +88,7 @@ const VendorHeader = ({ vendor }) => {
   //     id: 'delivery',
   //     icon: <DeliveryDiningIcon sx={{ fontSize: '1.1rem' }} />,
   //     label: 'Delivery Charge',
-  //     value: `INR ${vendor.delivery_charge.toFixed(2)}`,
+  //     value: `₹ ${vendor.delivery_charge.toFixed(2)}`,
   //     color: '#ff9800',
   //   });
   // }
@@ -99,7 +99,7 @@ const VendorHeader = ({ vendor }) => {
   //     id: 'packaging',
   //     icon: <LocalShippingIcon sx={{ fontSize: '1.1rem' }} />,
   //     label: 'Packaging Charge',
-  //     value: `INR ${vendor.packaging_charge.toFixed(2)}`,
+  //     value: `₹ ${vendor.packaging_charge.toFixed(2)}`,
   //     color: '#2196f3',
   //   });
   // }
@@ -110,7 +110,7 @@ const VendorHeader = ({ vendor }) => {
   //     id: 'convenience',
   //     icon: <LocalOfferIcon sx={{ fontSize: '1.1rem' }} />,
   //     label: 'Convenience Charge',
-  //     value: `INR ${vendor.convenience_charge.toFixed(2)}`,
+  //     value: `₹ ${vendor.convenience_charge.toFixed(2)}`,
   //     color: '#9c27b0',
   //   });
   // }
@@ -429,7 +429,7 @@ const VendorHeader = ({ vendor }) => {
           </Stack>
 
           {/* Action Buttons */}
-          <Stack direction="row" spacing={1.5} sx={{ mt: 0.5, flexWrap: 'wrap', gap: 1.5 }}>
+          <Stack direction="row" spacing={1.5} sx={{ mt: 0.5 }}>
             {vendor.mobile_number && (
               <Button
                 variant="contained"
@@ -437,10 +437,11 @@ const VendorHeader = ({ vendor }) => {
                 startIcon={<CallIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }} />}
                 href={`tel:${vendor.mobile_number}`}
                 sx={{
+                  flex: { xs: 1, sm: 'initial' },
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: '#fff',
                   fontWeight: 700,
-                  px: { xs: 2.5, sm: 3 },
+                  px: { xs: 2, sm: 3 },
                   py: { xs: 1, sm: 1.25 },
                   fontSize: { xs: '0.875rem', sm: '0.9rem' },
                   borderRadius: 2,
@@ -453,7 +454,7 @@ const VendorHeader = ({ vendor }) => {
                   transition: 'all 0.3s ease',
                 }}
               >
-                Call Vendor
+                Call
               </Button>
             )}
 
@@ -463,10 +464,11 @@ const VendorHeader = ({ vendor }) => {
               startIcon={<ShareIcon sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem' } }} />}
               onClick={handleShare}
               sx={{
+                flex: { xs: 1, sm: 'initial' },
                 borderColor: '#e0e0e0',
                 color: '#666',
                 fontWeight: 600,
-                px: { xs: 2.5, sm: 3 },
+                px: { xs: 2, sm: 3 },
                 py: { xs: 1, sm: 1.25 },
                 fontSize: { xs: '0.875rem', sm: '0.9rem' },
                 borderWidth: 1.5,

@@ -174,7 +174,7 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
                   fontSize: '0.8rem',
                 }}
               >
-                INR {mainPrice.toFixed(2)}
+                ₹ {mainPrice.toFixed(2)}
               </Typography>
               <Typography
                 variant="h6"
@@ -184,7 +184,7 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
                   fontSize: '1rem',
                 }}
               >
-                INR {specialPrice.toFixed(2)}
+                ₹ {specialPrice.toFixed(2)}
               </Typography>
             </>
           ) : (
@@ -196,7 +196,7 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
                 fontSize: '1rem',
               }}
             >
-              INR {mainPrice.toFixed(2)}
+              ₹ {mainPrice.toFixed(2)}
             </Typography>
           )}
         </Box>
@@ -321,11 +321,11 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
         <DialogContent sx={{ pt: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <Box>
             <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-              Price: <strong>INR {displayPrice.toFixed(2)}</strong>
+              Price: <strong>₹ {displayPrice.toFixed(2)}</strong>
             </Typography>
             {hasSpecialPrice && (
               <Typography variant="caption" sx={{ color: '#FF6B6B' }}>
-                Save INR {(mainPrice - specialPrice).toFixed(2)}
+                Save ₹ {(mainPrice - specialPrice).toFixed(2)}
               </Typography>
             )}
           </Box>

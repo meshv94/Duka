@@ -15,15 +15,26 @@ import {
   Slide,
   useMediaQuery,
   useTheme,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  Stack,
+  IconButton,
+  TextField,
 } from '@mui/material';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import DeliveryDiningIcon from '@mui/icons-material/DeliveryDining';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import AddIcon from '@mui/icons-material/Add';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import HomeIcon from '@mui/icons-material/Home';
+import WorkIcon from '@mui/icons-material/Work';
 import { useNavigate } from 'react-router-dom';
 import { useCartContext } from '../context/CartContext';
 import apiClient from '../api/apiClient';
+import AddressFormDialog from '../components/AddressFormDialog';
 
 const CartPage = () => {
   const navigate = useNavigate();
@@ -33,8 +44,39 @@ const CartPage = () => {
   const [checkoutData, setCheckoutData] = useState(null);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
+  const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+  const [submittingAddress, setSubmittingAddress] = useState(false);
+  const [deliveryType, setDeliveryType] = useState('today'); // 'today' or 'schedule'
+  const [deliveryDate, setDeliveryDate] = useState('');
 
-  // Call checkout API on page load
+  // Fetch addresses
+  const fetchAddresses = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+
+      const response = await apiClient.get('/app/addresses', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.success) {
+        setAddresses(response.data || []);
+        // Auto-select default address if available
+        const defaultAddr = response.data?.find((addr) => addr.isDefault);
+        if (defaultAddr) {
+          setSelectedAddress(defaultAddr._id);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching addresses:', err);
+    }
+  };
+
+  // Call checkout API and fetch addresses on page load
   useEffect(() => {
     const fetchCheckout = async () => {
       try {
@@ -56,7 +98,7 @@ const CartPage = () => {
         };
 
         // Get token from localStorage
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
 
         // Call checkout API with Bearer token
         const response = await apiClient.post('/app/checkout', checkoutPayload, {
@@ -85,6 +127,7 @@ const CartPage = () => {
 
     if (cart.length > 0) {
       fetchCheckout();
+      fetchAddresses();
     }
   }, [cart]);
 
@@ -93,10 +136,94 @@ const CartPage = () => {
     navigate('/vendors');
   };
 
+  const handleAddAddress = () => {
+    setAddressDialogOpen(true);
+  };
+
+  const handleSaveAddress = async (formData) => {
+    try {
+      setSubmittingAddress(true);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await apiClient.post('/app/addresses', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.success) {
+        setAddressDialogOpen(false);
+        fetchAddresses();
+        // Auto-select newly added address
+        if (response.data?._id) {
+          setSelectedAddress(response.data._id);
+        }
+      }
+    } catch (err) {
+      console.error('Error saving address:', err);
+      alert(err.response?.data?.message || 'Failed to save address');
+    } finally {
+      setSubmittingAddress(false);
+    }
+  };
+
   const handlePay = () => {
-    // TODO: Implement payment logic
-    console.log('Processing payment for orders:', checkoutData);
-    alert('Payment functionality to be implemented');
+    if (!selectedAddress) {
+      alert('Please select a delivery address');
+      return;
+    }
+
+    if (deliveryType === 'schedule' && !deliveryDate) {
+      alert('Please select a delivery date');
+      return;
+    }
+
+    // Prepare delivery date
+    let finalDeliveryDate;
+    if (deliveryType === 'today') {
+      finalDeliveryDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+    } else {
+      finalDeliveryDate = deliveryDate;
+    }
+
+    // Prepare payment data
+    const paymentData = {
+      selectedAddressId: selectedAddress,
+      deliveryType: deliveryType,
+      deliveryDate: finalDeliveryDate,
+      orders: checkoutData.map((order) => ({
+        orderId: order._id,
+        vendorId: order.vendor,
+        items: order.items,
+        totalAmount: order.total_payable_amount,
+      })),
+    };
+
+    // Console log the data
+    console.log('=== PAYMENT DATA ===');
+    console.log('Selected Address ID:', selectedAddress);
+    console.log('Delivery Type:', deliveryType);
+    console.log('Delivery Date:', finalDeliveryDate);
+    console.log('Complete Payment Data:', paymentData);
+    console.log('Cart Orders:', checkoutData);
+    console.log('===================');
+
+    alert('Payment functionality to be implemented. Check console for data.');
+  };
+
+  const getAddressIcon = (type) => {
+    switch (type) {
+      case 'home':
+        return <HomeIcon sx={{ fontSize: '1.2rem' }} />;
+      case 'work':
+        return <WorkIcon sx={{ fontSize: '1.2rem' }} />;
+      default:
+        return <LocationOnIcon sx={{ fontSize: '1.2rem' }} />;
+    }
   };
 
   const calculateGrandTotal = () => {
@@ -234,6 +361,7 @@ const CartPage = () => {
           onClick={handleClearCart}
           startIcon={<DeleteOutlineIcon />}
           sx={{
+            width: { xs: '100%', sm: 'auto' },
             borderRadius: '12px',
             borderColor: '#ef5350',
             color: '#ef5350',
@@ -370,11 +498,11 @@ const CartPage = () => {
                                   fontSize: { xs: '0.7rem', md: '0.75rem' },
                                 }}
                               >
-                                ${item.main_price.toFixed(2)}
+                                ₹ {item.main_price.toFixed(2)}
                               </Typography>
                               <Chip
                                 icon={<LocalOfferIcon sx={{ fontSize: { xs: 10, md: 12 } }} />}
-                                label={`$${item.special_price.toFixed(2)}`}
+                                label={`₹ ${item.special_price.toFixed(2)}`}
                                 size="small"
                                 sx={{
                                   backgroundColor: '#e8f5e9',
@@ -424,7 +552,7 @@ const CartPage = () => {
                                 fontSize: { xs: '0.9rem', md: '1rem' },
                               }}
                             >
-                              ${item.item_total.toFixed(2)}
+                              ₹ {item.item_total.toFixed(2)}
                             </Typography>
                           </Box>
                         </Box>
@@ -441,7 +569,7 @@ const CartPage = () => {
                         Subtotal:
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-                        ${order.subtotal.toFixed(2)}
+                        ₹ {order.subtotal.toFixed(2)}
                       </Typography>
                     </Box>
                     {order.discount > 0 && (
@@ -453,7 +581,7 @@ const CartPage = () => {
                           variant="body2"
                           sx={{ color: '#4caf50', fontWeight: 600, fontSize: { xs: '0.8rem', md: '0.875rem' } }}
                         >
-                          -${order.discount.toFixed(2)}
+                          -₹ {order.discount.toFixed(2)}
                         </Typography>
                       </Box>
                     )}
@@ -462,7 +590,7 @@ const CartPage = () => {
                         Packaging:
                       </Typography>
                       <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-                        ${order.packaging_charge.toFixed(2)}
+                        ₹ {order.packaging_charge.toFixed(2)}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -471,7 +599,7 @@ const CartPage = () => {
                         Delivery:
                       </Typography>
                       <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-                        ${order.delivery_charge.toFixed(2)}
+                        ₹ {order.delivery_charge.toFixed(2)}
                       </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
@@ -479,7 +607,7 @@ const CartPage = () => {
                         Convenience:
                       </Typography>
                       <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', md: '0.875rem' } }}>
-                        ${order.convenience_charge.toFixed(2)}
+                        ₹ {order.convenience_charge.toFixed(2)}
                       </Typography>
                     </Box>
                     <Divider sx={{ mb: 2 }} />
@@ -506,7 +634,7 @@ const CartPage = () => {
                           fontSize: { xs: '1.1rem', md: '1.25rem' },
                         }}
                       >
-                        ${order.total_payable_amount.toFixed(2)}
+                        ₹ {order.total_payable_amount.toFixed(2)}
                       </Typography>
                     </Box>
                     <Typography
@@ -536,6 +664,309 @@ const CartPage = () => {
             }}
           >
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
+              {/* Delivery Address Section */}
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    mb: 2,
+                    fontSize: { xs: '1rem', md: '1.125rem' },
+                  }}
+                >
+                  Delivery Address
+                </Typography>
+
+                {addresses.length === 0 ? (
+                  <Box
+                    sx={{
+                      p: 3,
+                      borderRadius: 2,
+                      border: '2px dashed #e0e0e0',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <LocationOnIcon sx={{ fontSize: 40, color: '#ccc', mb: 1 }} />
+                    <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+                      No addresses found
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={handleAddAddress}
+                      sx={{
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5568d3',
+                          backgroundColor: 'rgba(102, 126, 234, 0.05)',
+                        },
+                      }}
+                    >
+                      Add Address
+                    </Button>
+                  </Box>
+                ) : (
+                  <>
+                    {/* Horizontal Scroll - All Devices */}
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 1.5,
+                        overflowX: 'auto',
+                        pb: 1.5,
+                        mb: 2,
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: '#667eea #f0f0f0',
+                        '&::-webkit-scrollbar': {
+                          height: '8px',
+                        },
+                        '&::-webkit-scrollbar-track': {
+                          backgroundColor: '#f0f0f0',
+                          borderRadius: '10px',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                          backgroundColor: '#667eea',
+                          borderRadius: '10px',
+                          '&:hover': {
+                            backgroundColor: '#5568d3',
+                          },
+                        },
+                      }}
+                    >
+                      {addresses.map((address) => (
+                        <Card
+                          key={address._id}
+                          sx={{
+                            minWidth: { xs: 240, md: 280 },
+                            maxWidth: { xs: 240, md: 280 },
+                            border: selectedAddress === address._id ? '2px solid #667eea' : '1px solid #e0e0e0',
+                            borderRadius: 2,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            flexShrink: 0,
+                            backgroundColor: selectedAddress === address._id ? 'rgba(102, 126, 234, 0.05)' : '#fff',
+                            '&:hover': {
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                              transform: 'translateY(-2px)',
+                            },
+                          }}
+                          onClick={() => setSelectedAddress(address._id)}
+                        >
+                          <CardContent sx={{ p: { xs: 2, md: 2.5 }, '&:last-child': { pb: { xs: 2, md: 2.5 } } }}>
+                            <Box sx={{ mb: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                                {getAddressIcon(address.type)}
+                                <Typography variant="body2" sx={{ fontWeight: 700, textTransform: 'capitalize' }}>
+                                  {address.type}
+                                </Typography>
+                                {address.isDefault && (
+                                  <Chip
+                                    label="Default"
+                                    size="small"
+                                    sx={{
+                                      height: 18,
+                                      fontSize: '0.65rem',
+                                      backgroundColor: '#e8f5e9',
+                                      color: '#2e7d32',
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                {address.name}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  color: 'text.secondary',
+                                  display: '-webkit-box',
+                                  WebkitLineClamp: 3,
+                                  WebkitBoxOrient: 'vertical',
+                                  overflow: 'hidden',
+                                  lineHeight: 1.4,
+                                }}
+                              >
+                                {address.address}
+                                {address.city && `, ${address.city}`}
+                                {address.pincode && ` - ${address.pincode}`}
+                              </Typography>
+                            </Box>
+                            {selectedAddress === address._id && (
+                              <Box
+                                sx={{
+                                  mt: 1,
+                                  pt: 1,
+                                  borderTop: '1px solid #e0e0e0',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Chip
+                                  label="Selected"
+                                  size="small"
+                                  sx={{
+                                    height: 20,
+                                    fontSize: '0.7rem',
+                                    backgroundColor: '#667eea',
+                                    color: '#fff',
+                                    fontWeight: 600,
+                                  }}
+                                />
+                              </Box>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </Box>
+
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      startIcon={<AddIcon />}
+                      onClick={handleAddAddress}
+                      sx={{
+                        mt: 2,
+                        borderColor: '#667eea',
+                        color: '#667eea',
+                        '&:hover': {
+                          borderColor: '#5568d3',
+                          backgroundColor: 'rgba(102, 126, 234, 0.05)',
+                        },
+                      }}
+                    >
+                      Add New Address
+                    </Button>
+                  </>
+                )}
+              </Box>
+
+              <Divider sx={{ mb: 3 }} />
+
+              {/* Delivery Options Section */}
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 700,
+                    mb: 2,
+                    fontSize: { xs: '1rem', md: '1.125rem' },
+                  }}
+                >
+                  Delivery Options
+                </Typography>
+
+                <RadioGroup
+                  value={deliveryType}
+                  onChange={(e) => {
+                    setDeliveryType(e.target.value);
+                    if (e.target.value === 'today') {
+                      setDeliveryDate('');
+                    }
+                  }}
+                >
+                  <Stack spacing={1.5}>
+                    {/* Today Delivery */}
+                    <Card
+                      sx={{
+                        border: deliveryType === 'today' ? '2px solid #667eea' : '1px solid #e0e0e0',
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                        },
+                      }}
+                      onClick={() => {
+                        setDeliveryType('today');
+                        setDeliveryDate('');
+                      }}
+                    >
+                      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Radio
+                            value="today"
+                            size="small"
+                            sx={{ p: 0, mr: 1 }}
+                          />
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                              Today Delivery
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                              Get your order delivered today
+                            </Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+
+                    {/* Schedule Delivery */}
+                    <Card
+                      sx={{
+                        border: deliveryType === 'schedule' ? '2px solid #667eea' : '1px solid #e0e0e0',
+                        borderRadius: 2,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                        },
+                      }}
+                      onClick={() => setDeliveryType('schedule')}
+                    >
+                      <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: deliveryType === 'schedule' ? 1.5 : 0 }}>
+                          <Radio
+                            value="schedule"
+                            size="small"
+                            sx={{ p: 0, mr: 1 }}
+                          />
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                              Schedule Delivery
+                            </Typography>
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                              Choose your preferred delivery date
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Date Picker - Only show when schedule is selected */}
+                        {deliveryType === 'schedule' && (
+                          <Box sx={{ ml: 4 }}>
+                            <TextField
+                              fullWidth
+                              type="date"
+                              size="small"
+                              value={deliveryDate}
+                              onChange={(e) => setDeliveryDate(e.target.value)}
+                              InputLabelProps={{
+                                shrink: true,
+                              }}
+                              inputProps={{
+                                min: new Date(new Date().setDate(new Date().getDate() + 1))
+                                  .toISOString()
+                                  .split('T')[0], // Tomorrow onwards
+                              }}
+                              sx={{
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 1.5,
+                                },
+                              }}
+                            />
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Stack>
+                </RadioGroup>
+              </Box>
+
+              <Divider sx={{ mb: 3 }} />
+
               <Typography
                 variant="h6"
                 sx={{
@@ -614,7 +1045,7 @@ const CartPage = () => {
                     fontSize: { xs: '1.75rem', md: '2rem' },
                   }}
                 >
-                  ${calculateGrandTotal().toFixed(2)}
+                  ₹ {calculateGrandTotal().toFixed(2)}
                 </Typography>
               </Box>
 
@@ -671,6 +1102,15 @@ const CartPage = () => {
           </Card>
         </Grid>
       </Grid>
+
+      {/* Add Address Dialog */}
+      <AddressFormDialog
+        open={addressDialogOpen}
+        onClose={() => setAddressDialogOpen(false)}
+        onSubmit={handleSaveAddress}
+        initialData={null}
+        submitting={submittingAddress}
+      />
     </Container>
   );
 };

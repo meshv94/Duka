@@ -259,7 +259,7 @@ const VendorListPage = () => {
 
         <Container maxWidth="lg" sx={{ pb: 6 }}>
           {/* Error State */}
-          {error && !loading && (
+          {/* {error && !loading && (
             <Fade in timeout={600}>
               <Paper
                 elevation={0}
@@ -328,7 +328,7 @@ const VendorListPage = () => {
                 </Button>
               </Paper>
             </Fade>
-          )}
+          )} */}
 
           {/* Loading State - Skeleton Grid */}
           {loading ? (

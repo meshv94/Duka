@@ -73,19 +73,20 @@ exports.sendOtp = async (req, res) => {
 
     // Generate OTP
     const otp = user.generateOTP();
+    console.log(`Generated OTP for ${mobile_number}: ${otp}`);
 
     // Save user
     await user.save();
 
     // Send OTP to mobile number
-    const otpResult = await sendOtpToNumber(mobile_number, otp);
+    // const otpResult = await sendOtpToNumber(mobile_number, otp);
 
-    if (!otpResult.success) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send OTP. Please try again.'
-      });
-    }
+    // if (!otpResult.success) {
+    //   return res.status(500).json({
+    //     success: false,
+    //     message: 'Failed to send OTP. Please try again.'
+    //   });
+    // }
 
     res.status(200).json({
       success: true,

@@ -1,8 +1,13 @@
-import React from 'react';
-import { Box, AppBar, Toolbar, Typography, Container, IconButton, Badge, Stack } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, AppBar, Toolbar, Typography, Container, IconButton, Badge, Stack, Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton, Divider } from '@mui/material';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import SettingsIcon from '@mui/icons-material/Settings';
+import PersonIcon from '@mui/icons-material/Person';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import LogoutIcon from '@mui/icons-material/Logout';
+import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 import { useCartContext } from '../context/CartContext';
 
@@ -10,6 +15,27 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const { getCartTotals } = useCartContext();
   const { totalItems } = getCartTotals();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const toggleDrawer = (open) => (event) => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
+    }
+    setDrawerOpen(open);
+  };
+
+  const handleLogout = () => {
+    // Clear authentication data
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+
+    // Clear cart data
+    localStorage.removeItem('deliveryCart');
+
+    // Close drawer and redirect to login
+    setDrawerOpen(false);
+    navigate('/login');
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#fafbfc' }}>
@@ -83,45 +109,247 @@ const Layout = ({ children }) => {
 
             <Box sx={{ flexGrow: 1 }} />
 
-            {/* Cart Button with Badge */}
-            <IconButton
-              color="inherit"
-              onClick={() => navigate('/cart')}
-              sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                width: { xs: 44, sm: 48 },
-                height: { xs: 44, sm: 48 },
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                  transform: 'scale(1.08)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-                },
-              }}
-            >
-              <Badge
-                badgeContent={totalItems}
-                color="error"
-                overlap="circular"
+            {/* Action Buttons */}
+            <Stack direction="row" spacing={1.5}>
+              {/* Cart Button with Badge */}
+              <IconButton
+                color="inherit"
+                onClick={() => navigate('/cart')}
                 sx={{
-                  '& .MuiBadge-badge': {
-                    fontWeight: 700,
-                    fontSize: '0.7rem',
-                    minWidth: '20px',
-                    height: '20px',
-                    padding: '0 4px',
-                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  width: { xs: 44, sm: 48 },
+                  height: { xs: 44, sm: 48 },
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                    transform: 'scale(1.08)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
                   },
                 }}
               >
-                <ShoppingCartIcon sx={{ fontSize: { xs: '1.3rem', sm: '1.4rem' } }} />
-              </Badge>
-            </IconButton>
+                <Badge
+                  badgeContent={totalItems}
+                  color="error"
+                  overlap="circular"
+                  sx={{
+                    '& .MuiBadge-badge': {
+                      fontWeight: 700,
+                      fontSize: '0.7rem',
+                      minWidth: '20px',
+                      height: '20px',
+                      padding: '0 4px',
+                      boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+                    },
+                  }}
+                >
+                  <ShoppingCartIcon sx={{ fontSize: { xs: '1.3rem', sm: '1.4rem' } }} />
+                </Badge>
+              </IconButton>
+
+              {/* Settings Button */}
+              <IconButton
+                color="inherit"
+                onClick={toggleDrawer(true)}
+                sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  width: { xs: 44, sm: 48 },
+                  height: { xs: 44, sm: 48 },
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                    transform: 'scale(1.08)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                  },
+                }}
+              >
+                <SettingsIcon sx={{ fontSize: { xs: '1.3rem', sm: '1.4rem' } }} />
+              </IconButton>
+            </Stack>
           </Toolbar>
         </Container>
       </AppBar>
+
+      {/* Settings Drawer */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: { xs: 280, sm: 320 },
+            background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+          },
+        }}
+      >
+        <Box
+          sx={{ width: { xs: 280, sm: 320 } }}
+          role="presentation"
+        >
+          {/* Drawer Header */}
+          <Box
+            sx={{
+              p: 3,
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: '#fff',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              }}
+            >
+              Settings
+            </Typography>
+            <IconButton
+              onClick={toggleDrawer(false)}
+              sx={{
+                color: '#fff',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          {/* Menu Items */}
+          <List sx={{ pt: 2 }}>
+            {/* Profile */}
+            <ListItemButton
+              onClick={() => {
+                setDrawerOpen(false);
+                navigate('/profile');
+              }}
+              sx={{
+                py: 2,
+                px: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(102, 126, 234, 0.08)',
+                  pl: 4,
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 48 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <PersonIcon sx={{ color: '#667eea', fontSize: '1.4rem' }} />
+                </Box>
+              </ListItemIcon>
+              <ListItemText
+                primary="Profile"
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  color: '#1a1a1a',
+                }}
+              />
+            </ListItemButton>
+
+            <Divider sx={{ my: 1, mx: 2 }} />
+
+            {/* Address */}
+            <ListItemButton
+              onClick={() => {
+                setDrawerOpen(false);
+                navigate('/address');
+              }}
+              sx={{
+                py: 2,
+                px: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(102, 126, 234, 0.08)',
+                  pl: 4,
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 48 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <LocationOnIcon sx={{ color: '#1976d2', fontSize: '1.4rem' }} />
+                </Box>
+              </ListItemIcon>
+              <ListItemText
+                primary="Address"
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  color: '#1a1a1a',
+                }}
+              />
+            </ListItemButton>
+
+            <Divider sx={{ my: 1, mx: 2 }} />
+
+            {/* Logout */}
+            <ListItemButton
+              onClick={handleLogout}
+              sx={{
+                py: 2,
+                px: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(239, 83, 80, 0.08)',
+                  pl: 4,
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 48 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '10px',
+                    background: 'rgba(239, 83, 80, 0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <LogoutIcon sx={{ color: '#ef5350', fontSize: '1.4rem' }} />
+                </Box>
+              </ListItemIcon>
+              <ListItemText
+                primary="Logout"
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  color: '#ef5350',
+                }}
+              />
+            </ListItemButton>
+          </List>
+        </Box>
+      </Drawer>
 
       {/* Main Content */}
       <Box sx={{ flex: 1 }}>
