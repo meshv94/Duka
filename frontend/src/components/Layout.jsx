@@ -6,6 +6,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import SettingsIcon from '@mui/icons-material/Settings';
 import PersonIcon from '@mui/icons-material/Person';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import LogoutIcon from '@mui/icons-material/Logout';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
@@ -300,6 +301,49 @@ const Layout = ({ children }) => {
               </ListItemIcon>
               <ListItemText
                 primary="Address"
+                primaryTypographyProps={{
+                  fontWeight: 600,
+                  fontSize: '0.95rem',
+                  color: '#1a1a1a',
+                }}
+              />
+            </ListItemButton>
+
+            <Divider sx={{ my: 1, mx: 2 }} />
+
+            {/* My Orders */}
+            <ListItemButton
+              onClick={() => {
+                setDrawerOpen(false);
+                navigate('/my-orders');
+              }}
+              sx={{
+                py: 2,
+                px: 3,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  backgroundColor: 'rgba(102, 126, 234, 0.08)',
+                  pl: 4,
+                },
+              }}
+            >
+              <ListItemIcon sx={{ minWidth: 48 }}>
+                <Box
+                  sx={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #667eea15 0%, #764ba215 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <ShoppingBagIcon sx={{ color: '#764ba2', fontSize: '1.4rem' }} />
+                </Box>
+              </ListItemIcon>
+              <ListItemText
+                primary="My Orders"
                 primaryTypographyProps={{
                   fontWeight: 600,
                   fontSize: '0.95rem',

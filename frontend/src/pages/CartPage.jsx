@@ -171,7 +171,7 @@ const CartPage = () => {
     }
   };
 
-  const handlePay = () => {
+  const handlePay = async () => {
     if (!selectedAddress) {
       alert('Please select a delivery address');
       return;
@@ -182,37 +182,62 @@ const CartPage = () => {
       return;
     }
 
-    // Prepare delivery date
-    let finalDeliveryDate;
-    if (deliveryType === 'today') {
-      finalDeliveryDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
-    } else {
-      finalDeliveryDate = deliveryDate;
+    try {
+      setCheckoutLoading(true);
+      setError(null);
+
+      // Prepare delivery date
+      let finalDeliveryDate;
+      if (deliveryType === 'today') {
+        finalDeliveryDate = new Date().toISOString().split('T')[0]; // Today's date in YYYY-MM-DD format
+      } else {
+        finalDeliveryDate = deliveryDate;
+      }
+
+      // Extract cart IDs from checkoutData
+      const cartIds = checkoutData.map((order) => order._id);
+
+      // Prepare payment data
+      const paymentData = {
+        selectedAddressId: selectedAddress,
+        cartIds: cartIds,
+        deliveryDate: finalDeliveryDate,
+        deliveryType: deliveryType,
+      };
+
+      // Get token from localStorage
+      const token = localStorage.getItem('authToken');
+
+      // Call place order API
+      const response = await apiClient.post('/app/place-order', paymentData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Handle successful response
+      if (response?.success) {
+        // Clear cart from localStorage
+        clearCart();
+
+        // Show success message
+        alert('Order placed successfully! 🎉');
+
+        // Redirect to orders page or home
+        navigate('/vendors');
+      } else {
+        setError(response?.message || 'Failed to place order.');
+      }
+    } catch (err) {
+      console.error('Place order error:', err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          'Failed to place order. Please try again.'
+      );
+    } finally {
+      setCheckoutLoading(false);
     }
-
-    // Prepare payment data
-    const paymentData = {
-      selectedAddressId: selectedAddress,
-      deliveryType: deliveryType,
-      deliveryDate: finalDeliveryDate,
-      orders: checkoutData.map((order) => ({
-        orderId: order._id,
-        vendorId: order.vendor,
-        items: order.items,
-        totalAmount: order.total_payable_amount,
-      })),
-    };
-
-    // Console log the data
-    console.log('=== PAYMENT DATA ===');
-    console.log('Selected Address ID:', selectedAddress);
-    console.log('Delivery Type:', deliveryType);
-    console.log('Delivery Date:', finalDeliveryDate);
-    console.log('Complete Payment Data:', paymentData);
-    console.log('Cart Orders:', checkoutData);
-    console.log('===================');
-
-    alert('Payment functionality to be implemented. Check console for data.');
   };
 
   const getAddressIcon = (type) => {

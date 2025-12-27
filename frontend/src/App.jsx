@@ -9,6 +9,7 @@ import CartPage from './pages/CartPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import AddressPage from './pages/AddressPage';
+import MyOrdersPage from './pages/MyOrdersPage';
 
 // Create Material UI theme with modern, trustworthy colors
 const theme = createTheme({
@@ -153,6 +154,9 @@ function App() {
 
                   {/* Address */}
                   <Route path="/address" element={<AddressPage />} />
+
+                  {/* My Orders */}
+                  <Route path="/my-orders" element={<MyOrdersPage />} />
                 </Routes>
               </Layout>
             } />

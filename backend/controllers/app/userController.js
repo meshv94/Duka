@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const User = require('../../models/userModal');
+const Cart = require('../../models/cartModal');
 const { generateToken, sendOtpToNumber } = require('../../services/authService');
 
 // Validation Schemas
@@ -296,6 +297,45 @@ exports.logout = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error logging out',
+      error: error.message
+    });
+  }
+};
+
+// Get My Orders - All orders except status = 'New'
+exports.getMyOrders = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
+      });
+    }
+
+    // Find all orders (carts) for this user where status is not 'New'
+    const orders = await Cart.find({
+      user: userId,
+      status: { $ne: 'New' }
+    })
+      .populate('vendor', 'name vendor_image address mobile_number')
+      .populate('address', 'name address city pincode type')
+      .populate('items.product', 'name image')
+      .sort({ createdAt: -1 }); // Most recent first
+
+    res.status(200).json({
+      success: true,
+      message: 'Orders retrieved successfully',
+      data: orders,
+      count: orders.length
+    });
+
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching orders',
       error: error.message
     });
   }

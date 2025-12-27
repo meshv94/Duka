@@ -22,4 +22,7 @@ router.get('/profile', verifyToken, userController.getUserProfile);
 // Update user profile
 router.put('/profile/update', verifyToken, userController.updateUserProfile);
 
+// Get my orders (all orders except status = 'New')
+router.get('/my-orders', verifyToken, userController.getMyOrders);
+
 module.exports = router;

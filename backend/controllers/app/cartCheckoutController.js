@@ -105,3 +105,70 @@ exports.checkout = async (req, res) => {
 	}
 };
 
+// Place Order: Update cart(s) with address and delivery details, set status to Placed
+exports.placeOrder = async (req, res) => {
+	try {
+		const userId = req.user && (req.user._id || req.user.id || req.user);
+		if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+		const { selectedAddressId, cartIds, deliveryDate, deliveryType } = req.body;
+
+		// Validation
+		if (!selectedAddressId) {
+			return res.status(400).json({ success: false, message: 'Address is required' });
+		}
+
+		if (!Array.isArray(cartIds) || cartIds.length === 0) {
+			return res.status(400).json({ success: false, message: 'Cart IDs must be a non-empty array' });
+		}
+
+		if (!deliveryDate) {
+			return res.status(400).json({ success: false, message: 'Delivery date is required' });
+		}
+
+		// Prepare update data
+		const updateData = {
+			address: selectedAddressId,
+			delivery_date: new Date(deliveryDate),
+			delivery_time: deliveryType || 'today',
+			status: 'Placed'
+		};
+
+		// Update all carts
+		const updatedCarts = [];
+		for (const cartId of cartIds) {
+			const cart = await Cart.findOne({ _id: cartId, user: userId });
+
+			if (!cart) {
+				return res.status(404).json({
+					success: false,
+					message: `Cart not found or unauthorized: ${cartId}`
+				});
+			}
+
+			// Update cart
+			cart.address = updateData.address;
+			cart.delivery_date = updateData.delivery_date;
+			cart.delivery_time = updateData.delivery_time;
+			cart.status = updateData.status;
+
+			const saved = await cart.save();
+			updatedCarts.push(saved);
+		}
+
+		return res.status(200).json({
+			success: true,
+			message: 'Order placed successfully',
+			data: updatedCarts
+		});
+
+	} catch (err) {
+		console.error('Place order error:', err);
+		return res.status(500).json({
+			success: false,
+			message: 'Failed to place order',
+			error: err.message
+		});
+	}
+};
+
