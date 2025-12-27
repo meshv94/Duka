@@ -5,21 +5,43 @@ const Product = require('../../models/productModal');
 // Get all active vendors (status = 1) sorted by proximity to user's default address
 exports.getActiveVendors = async (req, res) => {
   try {
-    // Require authenticated user with address
+    // Require authenticated user
     const userId = req.user?._id;
 
-    // Find user's default address (fallback to any address)
-    let userAddress = await Address.findOne({ user: userId, isDefault: true });
-    if (!userAddress) {
-      userAddress = await Address.findOne({ user: userId }).sort({ createdAt: -1 });
-    }
+    let lat, lng;
 
-    if (!userAddress || userAddress.latitude == null || userAddress.longitude == null) {
-      return res.status(400).json({ success: false, message: 'Default address with latitude/longitude required' });
-    }
+    // First, check headers for coordinates (sent from frontend)
+    const headerLat = req.headers['x-latitude'];
+    const headerLng = req.headers['x-longitude'];
 
-    const lat = parseFloat(userAddress.latitude);
-    const lng = parseFloat(userAddress.longitude);
+    if (headerLat && headerLng) {
+      // Use coordinates from headers (current location)
+      lat = parseFloat(headerLat);
+      lng = parseFloat(headerLng);
+
+      if (isNaN(lat) || isNaN(lng)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid coordinates in headers'
+        });
+      }
+    } else {
+      // Fallback to user's saved address
+      let userAddress = await Address.findOne({ user: userId, isDefault: true });
+      if (!userAddress) {
+        userAddress = await Address.findOne({ user: userId }).sort({ createdAt: -1 });
+      }
+
+      if (!userAddress || userAddress.latitude == null || userAddress.longitude == null) {
+        return res.status(400).json({
+          success: false,
+          message: 'Location required. Please enable location or add an address with coordinates'
+        });
+      }
+
+      lat = parseFloat(userAddress.latitude);
+      lng = parseFloat(userAddress.longitude);
+    }
 
     // Use aggregation with $geoNear to sort by distance (requires 2dsphere index on vendor.location)
     const vendors = await Vendor.aggregate([

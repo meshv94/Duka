@@ -17,6 +17,21 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add user coordinates if available
+    const userCoordinates = localStorage.getItem('userCoordinates');
+    if (userCoordinates) {
+      try {
+        const { latitude, longitude } = JSON.parse(userCoordinates);
+        if (latitude && longitude) {
+          config.headers['x-latitude'] = latitude;
+          config.headers['x-longitude'] = longitude;
+        }
+      } catch (error) {
+        console.error('Error parsing user coordinates:', error);
+      }
+    }
+
     return config;
   },
   (error) => {

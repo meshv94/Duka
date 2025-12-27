@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -13,6 +13,12 @@ import {
   InputAdornment,
   Chip,
   Fade,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Snackbar,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -21,18 +27,124 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import MyLocationIcon from '@mui/icons-material/MyLocation';
 import useVendors from '../hooks/useVendors';
 import VendorCard from '../components/VendorCard';
 import CanvasBackground from '../components/CanvasBackground';
 import AnimatedVendorCardWrapper from '../components/AnimatedVendorCardWrapper';
+import apiClient from '../services/api';
 
 const VendorListPage = () => {
   const { vendors, loading, error } = useVendors();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
+  // Location states
+  const [locationDialog, setLocationDialog] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
   // Skeleton loaders count
   const skeletonCount = 8;
+
+  // Check for addresses and coordinates on mount
+  useEffect(() => {
+    const checkLocationSetup = async () => {
+      try {
+        // Check if coordinates are already saved
+        const savedCoordinates = localStorage.getItem('userCoordinates');
+        if (savedCoordinates) {
+          return; // Already have location
+        }
+
+        // Check if user has any addresses
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          return; // User not logged in, no need to check
+        }
+
+        const response = await apiClient.get('/app/addresses');
+        if (response.success && (!response.data || response.data.length === 0)) {
+          // No addresses found, show location dialog
+          setLocationDialog(true);
+        }
+      } catch (error) {
+        console.error('Error checking addresses:', error);
+      }
+    };
+
+    checkLocationSetup();
+  }, []);
+
+  // Get current location
+  const getCurrentLocation = () => {
+    setLocationLoading(true);
+    setLocationError(null);
+
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by your browser');
+      setLocationLoading(false);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+
+        // Save coordinates to localStorage
+        localStorage.setItem(
+          'userCoordinates',
+          JSON.stringify({
+            latitude,
+            longitude,
+            timestamp: new Date().toISOString(),
+          })
+        );
+
+        setLocationLoading(false);
+        setLocationDialog(false);
+        setSnackbarMessage('Location enabled successfully!');
+        setSnackbarOpen(true);
+
+        // Reload page to fetch vendors with new coordinates
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      },
+      (error) => {
+        setLocationLoading(false);
+        let errorMessage = 'Failed to get location';
+
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location permission denied. Please enable location access in your browser settings.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information unavailable';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out';
+            break;
+          default:
+            errorMessage = 'An unknown error occurred';
+        }
+
+        setLocationError(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0,
+      }
+    );
+  };
+
+  // Handle skip location
+  const handleSkipLocation = () => {
+    setLocationDialog(false);
+  };
 
   // Filter vendors based on search and filters
   const filteredVendors = useMemo(() => {
@@ -622,6 +734,147 @@ const VendorListPage = () => {
             </Fade>
           )}
         </Container>
+
+        {/* Location Permission Dialog */}
+        <Dialog
+          open={locationDialog}
+          onClose={handleSkipLocation}
+          maxWidth="sm"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            },
+          }}
+        >
+          <DialogTitle sx={{ pb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <MyLocationIcon sx={{ fontSize: 28, color: '#fff' }} />
+              </Box>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Enable Location
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Find vendors near you
+                </Typography>
+              </Box>
+            </Box>
+          </DialogTitle>
+          <DialogContent sx={{ pt: 2 }}>
+            <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary', lineHeight: 1.7 }}>
+              We need your location to show nearby vendors and provide accurate delivery estimates. Your
+              location data is only used to enhance your experience and is never shared.
+            </Typography>
+
+            {locationError && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                {locationError}
+              </Alert>
+            )}
+
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 2,
+                backgroundColor: '#f5f7fa',
+                border: '1px solid #e0e0e0',
+              }}
+            >
+              <Stack spacing={1.5}>
+                <Box sx={{ display: 'flex', alignItems: 'start', gap: 1.5 }}>
+                  <CheckCircleIcon sx={{ fontSize: 20, color: '#4caf50', mt: 0.2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Show vendors sorted by distance
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'start', gap: 1.5 }}>
+                  <CheckCircleIcon sx={{ fontSize: 20, color: '#4caf50', mt: 0.2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Get accurate delivery time estimates
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'start', gap: 1.5 }}>
+                  <CheckCircleIcon sx={{ fontSize: 20, color: '#4caf50', mt: 0.2 }} />
+                  <Typography variant="body2" color="text.secondary">
+                    Discover local businesses around you
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
+          </DialogContent>
+          <DialogActions sx={{ p: 3, pt: 2 }}>
+            <Button
+              onClick={handleSkipLocation}
+              sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                color: 'text.secondary',
+              }}
+            >
+              Maybe Later
+            </Button>
+            <Button
+              variant="contained"
+              onClick={getCurrentLocation}
+              disabled={locationLoading}
+              startIcon={
+                locationLoading ? (
+                  <CircularProgress size={18} sx={{ color: '#fff' }} />
+                ) : (
+                  <MyLocationIcon />
+                )
+              }
+              sx={{
+                textTransform: 'none',
+                fontWeight: 700,
+                px: 3,
+                py: 1.25,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #5568d3 0%, #653a8a 100%)',
+                  boxShadow: '0 6px 16px rgba(102, 126, 234, 0.4)',
+                },
+              }}
+            >
+              {locationLoading ? 'Getting Location...' : 'Enable Location'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Success Snackbar */}
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={3000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={() => setSnackbarOpen(false)}
+            severity="success"
+            sx={{
+              width: '100%',
+              borderRadius: 2,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            }}
+          >
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Box>
     </Box>
   );
