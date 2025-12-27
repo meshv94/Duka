@@ -59,6 +59,8 @@ mongoose.connection.on('disconnected', () => {
 const moduleRoutes = require('./routes/admin/moduleRoutes');
 const vendorRoutes = require('./routes/admin/vendorRoutes');
 const adminUserRoutes = require('./routes/admin/userRoutes');
+const orderRoutes = require('./routes/admin/orderRoutes');
+const dashboardRoutes = require('./routes/admin/dashboardRoutes');
 
 // App Routes
 const userRoutes = require('./routes/app/userRoutes');
@@ -70,6 +72,8 @@ const cartCheckoutRoutes = require('./routes/app/cartCheckoutRoute');
 app.use('/api/admin', moduleRoutes);
 app.use('/api/admin', vendorRoutes);
 app.use('/api/admin', adminUserRoutes);
+app.use('/api/admin', orderRoutes);
+app.use('/api/admin', dashboardRoutes);
 
 // Mount app routes
 app.use('/api/app', userRoutes);

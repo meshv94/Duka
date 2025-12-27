@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
+import Orders from './pages/Orders';
 import Vendors from './pages/Vendors';
 import Modules from './pages/Modules';
 import Users from './pages/Users';
@@ -66,6 +67,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/orders" element={<Orders />} />
             <Route path="/vendors" element={<Vendors />} />
             <Route path="/modules" element={<Modules />} />
             <Route path="/users" element={<Users />} />

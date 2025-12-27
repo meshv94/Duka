@@ -23,6 +23,7 @@ import {
   People as PeopleIcon,
   Settings as SettingsIcon,
   LocalShipping as DeliveryIcon,
+  Receipt as ReceiptIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -30,6 +31,7 @@ const drawerWidth = 260;
 
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
+  { text: 'Orders', icon: <ReceiptIcon />, path: '/orders' },
   { text: 'Vendors', icon: <StoreIcon />, path: '/vendors' },
   { text: 'Modules', icon: <AppsIcon />, path: '/modules' },
   { text: 'Users', icon: <PeopleIcon />, path: '/users' },

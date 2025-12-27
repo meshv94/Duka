@@ -1,0 +1,368 @@
+const Cart = require('../../models/cartModal');
+const Vendor = require('../../models/vendorModal');
+const Product = require('../../models/productModal');
+const User = require('../../models/userModal');
+
+/**
+ * Get comprehensive dashboard statistics
+ * GET /api/admin/dashboard/overview
+ */
+const getDashboardOverview = async (req, res) => {
+  try {
+    // Get date ranges
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get current month range
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // Get last 7 days range
+    const last7Days = new Date(today);
+    last7Days.setDate(last7Days.getDate() - 7);
+
+    // Get last 30 days range
+    const last30Days = new Date(today);
+    last30Days.setDate(last30Days.getDate() - 30);
+
+    // ==================== OVERALL STATISTICS ====================
+    const totalVendors = await Vendor.countDocuments({ status: 1 });
+    const totalProducts = await Product.countDocuments({ isActive: true });
+    const totalUsers = await User.countDocuments();
+    const totalOrders = await Cart.countDocuments({ status: { $ne: 'New' } });
+
+    // Total Revenue
+    const totalRevenueResult = await Cart.aggregate([
+      { $match: { status: { $in: ['Placed', 'Delivered'] } } },
+      { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
+    ]);
+    const totalRevenue = totalRevenueResult[0]?.total || 0;
+
+    // ==================== TODAY'S STATISTICS ====================
+    const todayOrders = await Cart.countDocuments({
+      createdAt: { $gte: today, $lt: tomorrow },
+      status: { $ne: 'New' },
+    });
+
+    const todayRevenueResult = await Cart.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: today, $lt: tomorrow },
+          status: { $in: ['Placed', 'Delivered'] },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
+    ]);
+    const todayRevenue = todayRevenueResult[0]?.total || 0;
+
+    const todayDeliveries = await Cart.countDocuments({
+      delivery_date: { $gte: today, $lt: tomorrow },
+      status: { $ne: 'New' },
+    });
+
+    // ==================== THIS MONTH'S STATISTICS ====================
+    const monthOrders = await Cart.countDocuments({
+      createdAt: { $gte: monthStart, $lte: monthEnd },
+      status: { $ne: 'New' },
+    });
+
+    const monthRevenueResult = await Cart.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: monthStart, $lte: monthEnd },
+          status: { $in: ['Placed', 'Delivered'] },
+        },
+      },
+      { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
+    ]);
+    const monthRevenue = monthRevenueResult[0]?.total || 0;
+
+    // ==================== STATUS-WISE BREAKDOWN ====================
+    const pendingOrders = await Cart.countDocuments({ status: 'Placed' });
+    const deliveredOrders = await Cart.countDocuments({ status: 'Delivered' });
+    const cancelledOrders = await Cart.countDocuments({ status: 'Cancelled' });
+
+    // ==================== TOP VENDORS (by revenue) ====================
+    const topVendors = await Cart.aggregate([
+      {
+        $match: {
+          status: { $in: ['Placed', 'Delivered'] },
+        },
+      },
+      {
+        $group: {
+          _id: '$vendor',
+          totalRevenue: { $sum: '$total_payable_amount' },
+          totalOrders: { $sum: 1 },
+        },
+      },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'vendors',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'vendorDetails',
+        },
+      },
+      { $unwind: '$vendorDetails' },
+      {
+        $project: {
+          _id: 1,
+          name: '$vendorDetails.name',
+          email: '$vendorDetails.email',
+          vendor_image: '$vendorDetails.vendor_image',
+          totalRevenue: 1,
+          totalOrders: 1,
+        },
+      },
+    ]);
+
+    // ==================== TOP PRODUCTS (by quantity sold) ====================
+    const topProducts = await Cart.aggregate([
+      {
+        $match: {
+          status: { $in: ['Placed', 'Delivered'] },
+        },
+      },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.product',
+          totalQuantity: { $sum: '$items.quantity' },
+          totalRevenue: { $sum: '$items.item_total' },
+          productName: { $first: '$items.name' },
+        },
+      },
+      { $sort: { totalQuantity: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'products',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'productDetails',
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: {
+            $ifNull: [
+              { $arrayElemAt: ['$productDetails.name', 0] },
+              '$productName',
+            ],
+          },
+          image: { $arrayElemAt: ['$productDetails.image', 0] },
+          totalQuantity: 1,
+          totalRevenue: 1,
+        },
+      },
+    ]);
+
+    // ==================== TOP USERS (by total spent) ====================
+    const topUsers = await Cart.aggregate([
+      {
+        $match: {
+          status: { $in: ['Placed', 'Delivered'] },
+        },
+      },
+      {
+        $group: {
+          _id: '$user',
+          totalSpent: { $sum: '$total_payable_amount' },
+          totalOrders: { $sum: 1 },
+        },
+      },
+      { $sort: { totalSpent: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'userDetails',
+        },
+      },
+      { $unwind: '$userDetails' },
+      {
+        $project: {
+          _id: 1,
+          name: '$userDetails.name',
+          email: '$userDetails.email',
+          mobile: '$userDetails.mobile',
+          totalSpent: 1,
+          totalOrders: 1,
+        },
+      },
+    ]);
+
+    // ==================== DAILY ORDERS (Last 7 Days) ====================
+    const dailyOrders = await Cart.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: last7Days },
+          status: { $ne: 'New' },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          count: { $sum: 1 },
+          revenue: { $sum: '$total_payable_amount' },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Fill in missing days with zero values
+    const filledDailyOrders = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      const existingDay = dailyOrders.find((d) => d._id === dateStr);
+      filledDailyOrders.push({
+        date: dateStr,
+        count: existingDay?.count || 0,
+        revenue: existingDay?.revenue || 0,
+      });
+    }
+
+    // ==================== RECENT ORDERS ====================
+    const recentOrders = await Cart.find({ status: { $ne: 'New' } })
+      .populate('user', 'name email')
+      .populate('vendor', 'name')
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .select('_id user vendor total_payable_amount status createdAt')
+      .lean();
+
+    // ==================== RESPONSE ====================
+    return res.status(200).json({
+      success: true,
+      message: 'Dashboard data fetched successfully',
+      data: {
+        // Overall stats
+        overview: {
+          totalVendors,
+          totalProducts,
+          totalUsers,
+          totalOrders,
+          totalRevenue,
+          pendingOrders,
+          deliveredOrders,
+          cancelledOrders,
+        },
+
+        // Today's stats
+        today: {
+          orders: todayOrders,
+          revenue: todayRevenue,
+          deliveries: todayDeliveries,
+        },
+
+        // This month's stats
+        thisMonth: {
+          orders: monthOrders,
+          revenue: monthRevenue,
+        },
+
+        // Top performers
+        topVendors,
+        topProducts,
+        topUsers,
+
+        // Charts data
+        dailyOrders: filledDailyOrders,
+        recentOrders,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch dashboard data',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get revenue statistics for charts
+ * GET /api/admin/dashboard/revenue-stats
+ */
+const getRevenueStats = async (req, res) => {
+  try {
+    const { period = '7days' } = req.query;
+
+    let startDate;
+    const endDate = new Date();
+
+    // Determine date range based on period
+    switch (period) {
+      case '7days':
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        break;
+      case '30days':
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        break;
+      case 'thisMonth':
+        startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+        break;
+      case 'lastMonth':
+        startDate = new Date(endDate.getFullYear(), endDate.getMonth() - 1, 1);
+        endDate.setDate(0); // Last day of last month
+        break;
+      default:
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+    }
+
+    // Get revenue data
+    const revenueData = await Cart.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate, $lte: endDate },
+          status: { $in: ['Placed', 'Delivered'] },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%Y-%m-%d', date: '$createdAt' },
+          },
+          revenue: { $sum: '$total_payable_amount' },
+          orders: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Revenue statistics fetched successfully',
+      data: revenueData,
+    });
+  } catch (error) {
+    console.error('Error fetching revenue statistics:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch revenue statistics',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  getDashboardOverview,
+  getRevenueStats,
+};

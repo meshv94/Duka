@@ -1,0 +1,375 @@
+const Joi = require('joi');
+const Cart = require('../../models/cartModal');
+
+// Validation Schema for updating order status
+const updateOrderStatusSchema = Joi.object({
+  status: Joi.string()
+    .valid('New', 'Placed', 'Cancelled', 'Delivered', 'Refunded')
+    .required()
+    .messages({
+      'string.empty': 'Status is required',
+      'any.required': 'Status is required',
+      'any.only': 'Status must be one of: New, Placed, Cancelled, Delivered, Refunded',
+    }),
+});
+
+/**
+ * Get all orders with optional filters
+ * GET /api/admin/orders
+ */
+const getAllOrders = async (req, res) => {
+  try {
+    const { orderDate, deliveryDate, status, page = 1, limit = 100 } = req.query;
+
+    // Build filter object
+    const filter = {};
+
+    // Filter by order date (createdAt)
+    if (orderDate) {
+      const startDate = new Date(orderDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(orderDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      filter.createdAt = {
+        $gte: startDate,
+        $lte: endDate,
+      };
+    }
+
+    // Filter by delivery date
+    if (deliveryDate) {
+      const deliveryStartDate = new Date(deliveryDate);
+      deliveryStartDate.setHours(0, 0, 0, 0);
+      const deliveryEndDate = new Date(deliveryDate);
+      deliveryEndDate.setHours(23, 59, 59, 999);
+
+      filter.delivery_date = {
+        $gte: deliveryStartDate,
+        $lte: deliveryEndDate,
+      };
+    }
+
+    // Filter by status
+    if (status) {
+      filter.status = status;
+    }
+
+    // Only get orders that have been placed (not New carts)
+    if (!status) {
+      filter.status = { $ne: 'New' };
+    }
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Fetch orders with population
+    const orders = await Cart.find(filter)
+      .populate('user', 'name email mobile')
+      .populate('vendor', 'name email mobile_number address')
+      .populate('address')
+      .populate({
+        path: 'items.product',
+        select: 'name main_price special_price image',
+      })
+      .sort({ createdAt: -1 }) // Most recent first
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Get total count for pagination
+    const totalOrders = await Cart.countDocuments(filter);
+
+    // Calculate statistics
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const stats = {
+      totalOrders: await Cart.countDocuments({ status: { $ne: 'New' } }),
+      todayOrders: await Cart.countDocuments({
+        createdAt: { $gte: today, $lt: tomorrow },
+        status: { $ne: 'New' },
+      }),
+      todayDeliveries: await Cart.countDocuments({
+        delivery_date: { $gte: today, $lt: tomorrow },
+        status: { $ne: 'New' },
+      }),
+      pendingOrders: await Cart.countDocuments({ status: 'Placed' }),
+      deliveredOrders: await Cart.countDocuments({ status: 'Delivered' }),
+      cancelledOrders: await Cart.countDocuments({ status: 'Cancelled' }),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Orders fetched successfully',
+      data: orders,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalOrders / parseInt(limit)),
+        totalOrders,
+        limit: parseInt(limit),
+      },
+      stats,
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch orders',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get order by ID
+ * GET /api/admin/orders/:id
+ */
+const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID format
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order ID format',
+      });
+    }
+
+    // Fetch order with full population
+    const order = await Cart.findById(id)
+      .populate('user', 'name email mobile_number')
+      .populate('vendor', 'name email mobile_number address latitude longitude')
+      .populate('address')
+      .populate({
+        path: 'items.product',
+        select: 'name main_price special_price image description',
+      })
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    // Rename address to delivery_address for clarity
+    if (order.address) {
+      order.delivery_address = order.address;
+      delete order.address;
+    }
+
+    // Rename delivery_date to deliveryDate for consistency
+    if (order.delivery_date) {
+      order.deliveryDate = order.delivery_date;
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order details fetched successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Error fetching order details:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch order details',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Update order status
+ * PUT /api/admin/orders/:id/status
+ */
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID format
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order ID format',
+      });
+    }
+
+    // Validate request body
+    const { error, value } = updateOrderStatusSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation error',
+        errors: error.details.map((detail) => detail.message),
+      });
+    }
+
+    const { status } = value;
+
+    // Find and update order
+    const order = await Cart.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true }
+    )
+      .populate('user', 'name email mobile')
+      .populate('vendor', 'name email mobile_number')
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order status updated successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to update order status',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Get order statistics
+ * GET /api/admin/orders/stats
+ */
+const getOrderStats = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get current month range
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const stats = {
+      // Overall stats
+      totalOrders: await Cart.countDocuments({ status: { $ne: 'New' } }),
+      totalRevenue: await Cart.aggregate([
+        { $match: { status: { $in: ['Placed', 'Delivered'] } } },
+        { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
+      ]).then((result) => result[0]?.total || 0),
+
+      // Today's stats
+      todayOrders: await Cart.countDocuments({
+        createdAt: { $gte: today, $lt: tomorrow },
+        status: { $ne: 'New' },
+      }),
+      todayRevenue: await Cart.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: today, $lt: tomorrow },
+            status: { $in: ['Placed', 'Delivered'] },
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
+      ]).then((result) => result[0]?.total || 0),
+      todayDeliveries: await Cart.countDocuments({
+        delivery_date: { $gte: today, $lt: tomorrow },
+        status: { $ne: 'New' },
+      }),
+
+      // This month's stats
+      monthOrders: await Cart.countDocuments({
+        createdAt: { $gte: monthStart, $lte: monthEnd },
+        status: { $ne: 'New' },
+      }),
+      monthRevenue: await Cart.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: monthStart, $lte: monthEnd },
+            status: { $in: ['Placed', 'Delivered'] },
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
+      ]).then((result) => result[0]?.total || 0),
+
+      // Status-wise breakdown
+      pendingOrders: await Cart.countDocuments({ status: 'Placed' }),
+      deliveredOrders: await Cart.countDocuments({ status: 'Delivered' }),
+      cancelledOrders: await Cart.countDocuments({ status: 'Cancelled' }),
+    };
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order statistics fetched successfully',
+      data: stats,
+    });
+  } catch (error) {
+    console.error('Error fetching order statistics:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch order statistics',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Delete order (soft delete by marking as cancelled)
+ * DELETE /api/admin/orders/:id
+ */
+const deleteOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID format
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order ID format',
+      });
+    }
+
+    // Find and update order status to Cancelled
+    const order = await Cart.findByIdAndUpdate(
+      id,
+      { status: 'Cancelled' },
+      { new: true }
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order cancelled successfully',
+      data: order,
+    });
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to cancel order',
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  getAllOrders,
+  getOrderById,
+  updateOrderStatus,
+  getOrderStats,
+  deleteOrder,
+};
