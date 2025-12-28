@@ -40,6 +40,8 @@ const VendorCard = ({ vendor }) => {
       sx={{
         cursor: 'pointer',
         height: '100%',
+        minHeight: 400,
+        maxHeight: 400,
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 2.5,
@@ -58,16 +60,24 @@ const VendorCard = ({ vendor }) => {
       }}
     >
       {/* Image Container with Badge */}
-      <Box sx={{ position: 'relative' }}>
+      <Box
+        sx={{
+          position: 'relative',
+          width: '100%',
+          height: 200,
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
         {/* NEW Badge */}
         {vendor.isNew && (
           <Badge
             badgeContent="NEW"
             sx={{
               position: 'absolute',
-              top: 0,
-              right: 0,
-              left: 'auto',
+              top: 8,
+              right: 8,
+              zIndex: 2,
               '& .MuiBadge-badge': {
                 backgroundColor: '#FF6B6B',
                 color: '#fff',
@@ -85,12 +95,14 @@ const VendorCard = ({ vendor }) => {
         {/* Vendor Image */}
         <CardMedia
           component="img"
-          height="220"
           image={vendor.vendor_image || FALLBACK_IMAGE}
           alt={vendor.name}
           loading="lazy"
           sx={{
+            width: '100%',
+            height: '100%',
             objectFit: 'cover',
+            objectPosition: 'center',
             backgroundColor: '#f5f5f5',
           }}
         />
@@ -127,11 +139,13 @@ const VendorCard = ({ vendor }) => {
       {/* Content */}
       <CardContent
         sx={{
-          flexGrow: 1,
+          flex: 1,
           display: 'flex',
           flexDirection: 'column',
           padding: '16px',
           gap: 1,
+          minHeight: 0,
+          overflow: 'hidden',
         }}
       >
         {/* Vendor Name and Category */}
@@ -145,6 +159,9 @@ const VendorCard = ({ vendor }) => {
               lineHeight: 1.3,
               color: '#1a1a1a',
               mb: 0.5,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
             {vendor.name}
@@ -158,6 +175,9 @@ const VendorCard = ({ vendor }) => {
                 color: '#666',
                 fontWeight: 500,
                 display: 'block',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
               {vendor.module.name}

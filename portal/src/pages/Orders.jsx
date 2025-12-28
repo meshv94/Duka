@@ -38,6 +38,9 @@ import {
   LocationOn as LocationIcon,
   Person as PersonIcon,
   Phone as PhoneIcon,
+  Store as StoreIcon,
+  Email as EmailIcon,
+  AccessTime as TimeIcon,
 } from '@mui/icons-material';
 import orderService from '../services/orderService';
 
@@ -384,6 +387,7 @@ const Orders = () => {
               <TableRow sx={{ backgroundColor: '#f5f7fa' }}>
                 <TableCell sx={{ fontWeight: 700 }}>Order ID</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Customer</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Vendor</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Order Date</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Delivery Date</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Items</TableCell>
@@ -395,13 +399,13 @@ const Orders = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                     <CircularProgress />
                   </TableCell>
                 </TableRow>
               ) : orders.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                     <Typography variant="body1" color="textSecondary">
                       No orders found
                     </Typography>
@@ -420,6 +424,16 @@ const Orders = () => {
                       <Typography variant="caption" color="textSecondary">
                         {order.user?.email || ''}
                       </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Avatar src={order.vendor?.vendor_image} sx={{ width: 32, height: 32 }}>
+                          <StoreIcon sx={{ fontSize: 18 }} />
+                        </Avatar>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {order.vendor?.name || 'N/A'}
+                        </Typography>
+                      </Box>
                     </TableCell>
                     <TableCell>{formatDate(order.createdAt)}</TableCell>
                     <TableCell>{formatDateOnly(order.delivery_date)}</TableCell>
@@ -547,6 +561,69 @@ const Orders = () => {
                   </Paper>
                 </Grid>
               </Grid>
+
+              {/* Vendor Information */}
+              {orderDetails.vendor && (
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: '#667eea' }}>
+                    Vendor Information
+                  </Typography>
+                  <Paper
+                    sx={{
+                      p: 2.5,
+                      backgroundColor: '#f5f7fa',
+                      border: '1px solid #e0e0e0',
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                      <Avatar
+                        src={orderDetails.vendor.vendor_image}
+                        sx={{ width: 56, height: 56 }}
+                      >
+                        <StoreIcon />
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                          {orderDetails.vendor.name || 'N/A'}
+                        </Typography>
+                        {orderDetails.vendor.email && (
+                          <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+                            {orderDetails.vendor.email}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+
+                    <Stack spacing={1.5}>
+                      {orderDetails.vendor.mobile_number && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <PhoneIcon sx={{ fontSize: 18, color: '#667eea' }} />
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {orderDetails.vendor.mobile_number}
+                          </Typography>
+                        </Box>
+                      )}
+                      {orderDetails.vendor.address && (
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                          <LocationIcon sx={{ fontSize: 18, color: '#667eea', mt: 0.2 }} />
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {orderDetails.vendor.address}
+                          </Typography>
+                        </Box>
+                      )}
+                      {(orderDetails.vendor.open_time || orderDetails.vendor.close_time) && (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TimeIcon sx={{ fontSize: 18, color: '#667eea' }} />
+                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                            {orderDetails.vendor.open_time || 'N/A'} - {orderDetails.vendor.close_time || 'N/A'}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                  </Paper>
+                </Box>
+              )}
 
               {/* Order Items */}
               <Box sx={{ mb: 3 }}>

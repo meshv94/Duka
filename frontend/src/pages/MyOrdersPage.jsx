@@ -451,23 +451,56 @@ const MyOrdersPage = () => {
                 <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: '#667eea' }}>
                   Vendor Information
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 2 }}>
-                  <Avatar src={selectedOrder.vendor?.vendor_image} sx={{ width: 56, height: 56 }}>
-                    <StoreIcon />
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body1" sx={{ fontWeight: 700, mb: 0.5 }}>
-                      {selectedOrder.vendor?.name || 'Unknown Vendor'}
-                    </Typography>
+                <Box
+                  sx={{
+                    p: 2.5,
+                    bgcolor: '#f5f5f5',
+                    borderRadius: 2,
+                    border: '1px solid #e0e0e0',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                    <Avatar src={selectedOrder.vendor?.vendor_image} sx={{ width: 56, height: 56 }}>
+                      <StoreIcon />
+                    </Avatar>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                        {selectedOrder.vendor?.name || 'Unknown Vendor'}
+                      </Typography>
+                      {selectedOrder.vendor?.email && (
+                        <Typography variant="body2" color="textSecondary" sx={{ mb: 0.5 }}>
+                          {selectedOrder.vendor.email}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+
+                  <Stack spacing={1.5}>
                     {selectedOrder.vendor?.mobile_number && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        <PhoneIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
-                        <Typography variant="caption" color="textSecondary">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <PhoneIcon sx={{ fontSize: 18, color: '#667eea' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
                           {selectedOrder.vendor.mobile_number}
                         </Typography>
                       </Box>
                     )}
-                  </Box>
+                    {selectedOrder.vendor?.address && (
+                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                        <LocationIcon sx={{ fontSize: 18, color: '#667eea', mt: 0.2 }} />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {selectedOrder.vendor.address}
+                        </Typography>
+                      </Box>
+                    )}
+                    {(selectedOrder.vendor?.open_time || selectedOrder.vendor?.close_time) && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <TimeIcon sx={{ fontSize: 18, color: '#667eea' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          {selectedOrder.vendor.open_time || 'N/A'} - {selectedOrder.vendor.close_time || 'N/A'}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Stack>
                 </Box>
               </Box>
 

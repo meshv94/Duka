@@ -80,7 +80,7 @@ exports.sendOtp = async (req, res) => {
     await user.save();
 
     // Send OTP to mobile number
-    const otpResult = await sendOtpToNumber(mobile_number, otp);
+    // const otpResult = await sendOtpToNumber(mobile_number, otp);
 
     // if (!otpResult.success) {
     //   return res.status(500).json({
