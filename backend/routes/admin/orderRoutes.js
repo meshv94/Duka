@@ -16,6 +16,12 @@ router.get('/orders/:id', orderController.getOrderById);
 // Update order status
 router.put('/orders/:id/status', orderController.updateOrderStatus);
 
+// Mark order as delivered
+router.put('/orders/:id/deliver', orderController.markAsDelivered);
+
+// Cancel order with reason
+router.put('/orders/:id/cancel', orderController.cancelOrder);
+
 // Delete/Cancel order
 router.delete('/orders/:id', orderController.deleteOrder);
 

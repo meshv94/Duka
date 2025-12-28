@@ -38,6 +38,16 @@ const orderService = {
   getOrdersByDateRange: async (startDate, endDate) => {
     return await apiClient.get(`/orders?startDate=${startDate}&endDate=${endDate}`);
   },
+
+  // Mark order as delivered
+  markAsDelivered: async (id) => {
+    return await apiClient.put(`/orders/${id}/deliver`);
+  },
+
+  // Cancel order with reason
+  cancelOrder: async (id, cancelReason) => {
+    return await apiClient.put(`/orders/${id}/cancel`, { cancel_reason: cancelReason });
+  },
 };
 
 export default orderService;

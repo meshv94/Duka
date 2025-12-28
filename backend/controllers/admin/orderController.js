@@ -366,10 +366,156 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+/**
+ * Mark order as delivered
+ * PUT /api/admin/orders/:id/deliver
+ */
+const markAsDelivered = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate ID format
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order ID format',
+      });
+    }
+
+    // Find order
+    const order = await Cart.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    // Check if order can be delivered
+    if (order.status === 'Cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot deliver a cancelled order',
+      });
+    }
+
+    if (order.status === 'Delivered') {
+      return res.status(400).json({
+        success: false,
+        message: 'Order is already delivered',
+      });
+    }
+
+    // Update order status to Delivered
+    order.status = 'Delivered';
+    await order.save();
+
+    // Populate for response
+    const updatedOrder = await Cart.findById(id)
+      .populate('user', 'name email mobile')
+      .populate('vendor', 'name email mobile_number')
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order marked as delivered successfully',
+      data: updatedOrder,
+    });
+  } catch (error) {
+    console.error('Error marking order as delivered:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to mark order as delivered',
+      error: error.message,
+    });
+  }
+};
+
+/**
+ * Cancel order with reason
+ * PUT /api/admin/orders/:id/cancel
+ */
+const cancelOrder = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { cancel_reason } = req.body;
+
+    // Validate ID format
+    if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid order ID format',
+      });
+    }
+
+    // Validate cancel reason
+    if (!cancel_reason || cancel_reason.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cancel reason is required',
+      });
+    }
+
+    // Find order
+    const order = await Cart.findById(id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    // Check if order can be cancelled
+    if (order.status === 'Cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: 'Order is already cancelled',
+      });
+    }
+
+    if (order.status === 'Delivered') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot cancel a delivered order',
+      });
+    }
+
+    // Update order
+    order.status = 'Cancelled';
+    order.cancel_reason = cancel_reason.trim();
+    order.cancelled_by = 'admin';
+    order.cancelled_at = new Date();
+    await order.save();
+
+    // Populate for response
+    const updatedOrder = await Cart.findById(id)
+      .populate('user', 'name email mobile')
+      .populate('vendor', 'name email mobile_number')
+      .lean();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Order cancelled successfully',
+      data: updatedOrder,
+    });
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to cancel order',
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
   getOrderStats,
   deleteOrder,
+  markAsDelivered,
+  cancelOrder,
 };

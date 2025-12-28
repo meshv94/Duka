@@ -35,7 +35,10 @@ const cartSchema = new mongoose.Schema({
 	stripe_session_id: { type: String },
 	stripe_payment_intent: { type: String },
 
-	status: { type: String, enum: ['New','Placed','Cancelled', 'Delivered', 'Refunded'], default: 'New' }
+	status: { type: String, enum: ['New','Placed','Cancelled', 'Delivered', 'Refunded'], default: 'New' },
+	cancel_reason: { type: String },
+	cancelled_by: { type: String, enum: ['admin', 'user', 'system'] },
+	cancelled_at: { type: Date }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Cart', cartSchema);

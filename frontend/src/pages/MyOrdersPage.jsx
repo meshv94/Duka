@@ -146,7 +146,7 @@ const MyOrdersPage = () => {
       <Box sx={{ mb: { xs: 2, md: 4 }, px: { xs: 1, md: 0 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
           <IconButton
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/modules')}
             sx={{
               bgcolor: 'rgba(102, 126, 234, 0.1)',
               '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.2)' },
@@ -220,7 +220,7 @@ const MyOrdersPage = () => {
             <Button
               variant="contained"
               size="large"
-              onClick={() => navigate('/vendors')}
+              onClick={() => navigate('/modules')}
               sx={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: '#fff',

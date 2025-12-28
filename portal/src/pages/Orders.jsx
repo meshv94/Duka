@@ -41,6 +41,8 @@ import {
   Store as StoreIcon,
   Email as EmailIcon,
   AccessTime as TimeIcon,
+  CheckCircle as CheckCircleIcon,
+  Cancel as CancelIcon,
 } from '@mui/icons-material';
 import orderService from '../services/orderService';
 
@@ -55,6 +57,11 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+
+  // Cancel dialog states
+  const [cancelDialog, setCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [processingAction, setProcessingAction] = useState(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -165,6 +172,76 @@ const Orders = () => {
     setTimeout(() => {
       fetchOrders();
     }, 100);
+  };
+
+  // Handle mark as delivered
+  const handleMarkAsDelivered = async () => {
+    if (!orderDetails) return;
+
+    try {
+      setProcessingAction(true);
+      setError(null);
+
+      const response = await orderService.markAsDelivered(orderDetails._id);
+
+      if (response.success) {
+        setSuccess('Order marked as delivered successfully');
+        setDetailsDialog(false);
+        fetchOrders();
+        setOrderDetails(null);
+      } else {
+        setError(response.message || 'Failed to mark order as delivered');
+      }
+    } catch (err) {
+      console.error('Error marking order as delivered:', err);
+      setError(err.response?.data?.message || 'Failed to mark order as delivered');
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
+  // Handle open cancel dialog
+  const handleOpenCancelDialog = () => {
+    setCancelDialog(true);
+  };
+
+  // Handle close cancel dialog
+  const handleCloseCancelDialog = () => {
+    setCancelDialog(false);
+    setCancelReason('');
+  };
+
+  // Handle cancel order
+  const handleCancelOrder = async () => {
+    if (!orderDetails) return;
+
+    if (!cancelReason.trim()) {
+      setError('Please provide a cancellation reason');
+      return;
+    }
+
+    try {
+      setProcessingAction(true);
+      setError(null);
+
+      const response = await orderService.cancelOrder(orderDetails._id, cancelReason);
+
+      if (response.success) {
+        setSuccess('Order cancelled successfully');
+        setCancelDialog(false);
+        setDetailsDialog(false);
+        fetchOrders();
+        setOrderDetails(null);
+        setCancelReason('');
+      } else {
+        setError(response.message || 'Failed to cancel order');
+      }
+    } catch (err) {
+      console.error('Error cancelling order:', err);
+      setError(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setProcessingAction(false);
+    }
   };
 
   // Get status color
@@ -531,6 +608,21 @@ const Orders = () => {
                           sx={{ textTransform: 'capitalize' }}
                         />
                       </Box>
+                      {orderDetails.status === 'Cancelled' && orderDetails.cancel_reason && (
+                        <Box sx={{ mt: 2 }}>
+                          <Alert severity="error" sx={{ borderRadius: 2 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 700, display: 'block', mb: 0.5 }}>
+                              Cancellation Reason:
+                            </Typography>
+                            <Typography variant="body2">{orderDetails.cancel_reason}</Typography>
+                            {orderDetails.cancelled_at && (
+                              <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 0.5 }}>
+                                Cancelled on: {formatDate(orderDetails.cancelled_at)}
+                              </Typography>
+                            )}
+                          </Alert>
+                        </Box>
+                      )}
                     </Stack>
                   </Paper>
                 </Grid>
@@ -721,8 +813,69 @@ const Orders = () => {
             </Typography>
           )}
         </DialogContent>
+        <DialogActions sx={{ px: 3, py: 2, gap: 1 }}>
+          <Button onClick={handleCloseDetails} color="inherit">
+            Close
+          </Button>
+          <Box sx={{ flex: 1 }} />
+          {orderDetails && orderDetails.status !== 'Cancelled' && orderDetails.status !== 'Delivered' && (
+            <>
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<CancelIcon />}
+                onClick={handleOpenCancelDialog}
+                disabled={processingAction}
+              >
+                Cancel Order
+              </Button>
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={<CheckCircleIcon />}
+                onClick={handleMarkAsDelivered}
+                disabled={processingAction}
+                sx={{
+                  background: 'linear-gradient(135deg, #4caf50 0%, #45a049 100%)',
+                }}
+              >
+                Mark as Delivered
+              </Button>
+            </>
+          )}
+        </DialogActions>
+      </Dialog>
+
+      {/* Cancel Order Dialog */}
+      <Dialog open={cancelDialog} onClose={handleCloseCancelDialog} maxWidth="sm" fullWidth>
+        <DialogTitle>Cancel Order</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
+            Please provide a reason for cancelling this order:
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Cancellation Reason"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+            placeholder="e.g., Out of stock, Customer request, etc."
+            variant="outlined"
+          />
+        </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDetails}>Close</Button>
+          <Button onClick={handleCloseCancelDialog} disabled={processingAction}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleCancelOrder}
+            disabled={processingAction || !cancelReason.trim()}
+          >
+            {processingAction ? <CircularProgress size={24} /> : 'Confirm Cancellation'}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
