@@ -213,59 +213,27 @@ const CartPage = () => {
       // Get token from localStorage
       const token = localStorage.getItem('authToken');
 
-      // Call place order API
-      const response = await apiClient.post('/app/place-order', paymentData, {
+      // Call Stripe checkout API
+      const response = await apiClient.post('/app/create-stripe-checkout', paymentData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       // Handle successful response
-      if (response?.success) {
-        // Clear cart from localStorage
-        clearCart();
-
-        // Show success screen
-        setOrderSuccess(true);
-
-        // Trigger confetti animation
-        const duration = 3000;
-        const animationEnd = Date.now() + duration;
-        const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
-
-        function randomInRange(min, max) {
-          return Math.random() * (max - min) + min;
-        }
-
-        const interval = setInterval(function () {
-          const timeLeft = animationEnd - Date.now();
-
-          if (timeLeft <= 0) {
-            return clearInterval(interval);
-          }
-
-          const particleCount = 50 * (timeLeft / duration);
-
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-          });
-          confetti({
-            ...defaults,
-            particleCount,
-            origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-          });
-        }, 250);
+      if (response?.success && response?.url) {
+        // Redirect to Stripe checkout page
+        console.log("pay now response", response)
+        window.location.href = response.url;
       } else {
-        setError(response?.message || 'Failed to place order.');
+        setError(response?.message || 'Failed to create checkout session.');
       }
     } catch (err) {
-      console.error('Place order error:', err);
+      console.error('Stripe checkout error:', err);
       setError(
         err.response?.data?.message ||
           err.message ||
-          'Failed to place order. Please try again.'
+          'Failed to create checkout session. Please try again.'
       );
     } finally {
       setCheckoutLoading(false);

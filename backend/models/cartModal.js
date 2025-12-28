@@ -30,6 +30,11 @@ const cartSchema = new mongoose.Schema({
 	total_quantity: { type: Number, default: 0, min: 0 },
 	total_payable_amount: { type: Number, required: true, min: 0, default: 0 },
 
+	// payment info
+	payment_status: { type: String, enum: ['Pending', 'Paid', 'Failed', 'Refunded'], default: 'Pending' },
+	stripe_session_id: { type: String },
+	stripe_payment_intent: { type: String },
+
 	status: { type: String, enum: ['New','Placed','Cancelled', 'Delivered', 'Refunded'], default: 'New' }
 }, { timestamps: true });
 

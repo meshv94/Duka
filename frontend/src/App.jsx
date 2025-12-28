@@ -11,6 +11,7 @@ import ProfilePage from './pages/ProfilePage';
 import AddressPage from './pages/AddressPage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import ModulesPage from './pages/ModulesPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
 
 // Create Material UI theme with modern, trustworthy colors
 const theme = createTheme({
@@ -161,6 +162,9 @@ function App() {
 
                   {/* My Orders */}
                   <Route path="/my-orders" element={<MyOrdersPage />} />
+
+                  {/* Payment Success */}
+                  <Route path="/payment-success" element={<PaymentSuccessPage />} />
                 </Routes>
               </Layout>
             } />
