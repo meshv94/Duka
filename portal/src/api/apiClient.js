@@ -1,5 +1,5 @@
 // API Client for portal
-const API_BASE_URL = 'http://localhost:5000/api/admin';
+const API_BASE_URL = 'https://deliveryapp-backend-2spq.onrender.com/api/admin';
 
 class ApiClient {
   constructor() {
