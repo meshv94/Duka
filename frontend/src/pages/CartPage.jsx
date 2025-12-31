@@ -872,14 +872,14 @@ const CartPage = () => {
           ))}
         </Grid>
 
-        {/* Right: Payment Summary */}
+        {/* Right: Delivery & Payment */}
         <Grid item xs={12} md={4}>
+          {/* Delivery Address & Options Card */}
           <Card
             sx={{
               borderRadius: '16px',
               boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
-              position: { md: 'sticky' },
-              top: { md: 20 },
+              mb: 3,
               background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
             }}
           >
@@ -1184,9 +1184,20 @@ const CartPage = () => {
                   </Stack>
                 </RadioGroup>
               </Box>
+            </CardContent>
+          </Card>
 
-              <Divider sx={{ mb: 3 }} />
-
+          {/* Payment Summary Card */}
+          <Card
+            sx={{
+              borderRadius: '16px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+              position: { md: 'sticky' },
+              top: { md: 20 },
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+            }}
+          >
+            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Typography
                 variant="h6"
                 sx={{

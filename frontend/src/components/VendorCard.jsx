@@ -40,8 +40,7 @@ const VendorCard = ({ vendor }) => {
       sx={{
         cursor: 'pointer',
         height: '100%',
-        minHeight: 300,
-        maxHeight: 400,
+        minHeight: { xs: 340, sm: 360 },
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 2.5,

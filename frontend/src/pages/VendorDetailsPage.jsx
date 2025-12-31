@@ -278,18 +278,41 @@ const VendorDetailsPage = () => {
   }
 
   return (
-    <Box sx={{ backgroundColor: '#fafafa', minHeight: '100vh', position: 'relative' }}>
+    <Box
+      sx={{
+        background: 'linear-gradient(180deg, #f8f9fc 0%, #ffffff 50%, #f8f9fc 100%)',
+        minHeight: '100vh',
+        position: 'relative',
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '600px',
+          background: 'radial-gradient(ellipse at top, rgba(102, 126, 234, 0.1) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 0,
+        }
+      }}
+    >
       {/* Vendor Header with Banner */}
       <VendorHeader vendor={vendor} />
 
       {/* Main Content Area */}
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4, position: 'relative', zIndex: 1 }}>
         {/* Breadcrumbs Navigation */}
         <Fade in timeout={400}>
           <Breadcrumbs
             separator={<NavigateNextIcon fontSize="small" />}
             sx={{
               mb: 3,
+              backgroundColor: 'rgba(255, 255, 255, 0.7)',
+              backdropFilter: 'blur(10px)',
+              padding: '12px 20px',
+              borderRadius: 2,
+              border: '1px solid rgba(102, 126, 234, 0.1)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
               '& .MuiBreadcrumbs-separator': {
                 color: '#999',
               },
@@ -384,12 +407,16 @@ const VendorDetailsPage = () => {
                   elevation={0}
                   sx={{
                     minWidth: { xs: '100%', sm: 300 },
-                    borderRadius: 2,
+                    borderRadius: 2.5,
                     border: '1px solid #e0e0e0',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
                     transition: 'all 0.3s ease',
                     '&:focus-within': {
                       borderColor: '#667eea',
-                      boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
+                      boxShadow: '0 4px 20px rgba(102, 126, 234, 0.2)',
+                      transform: 'translateY(-2px)',
                     },
                   }}
                 >
@@ -429,8 +456,10 @@ const VendorDetailsPage = () => {
                   textAlign: 'center',
                   py: 10,
                   borderRadius: 3,
-                  background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
-                  border: '2px dashed #e0e0e0',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(10px)',
+                  border: '2px dashed rgba(102, 126, 234, 0.2)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
                 }}
               >
                 <Box
@@ -476,8 +505,10 @@ const VendorDetailsPage = () => {
                   textAlign: 'center',
                   py: 8,
                   borderRadius: 3,
-                  background: 'linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%)',
-                  border: '2px dashed #e0e0e0',
+                  background: 'rgba(255, 255, 255, 0.8)',
+                  backdropFilter: 'blur(10px)',
+                  border: '2px dashed rgba(102, 126, 234, 0.2)',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
                 }}
               >
                 <Box
@@ -536,8 +567,10 @@ const VendorDetailsPage = () => {
               <Grid
                 container
                 spacing={{ xs: 2, sm: 2.5, md: 3 }}
+                justifyContent="center"
                 sx={{
                   animation: 'fadeIn 0.6s ease-in',
+                  position: 'relative',
                   '@keyframes fadeIn': {
                     from: {
                       opacity: 0,

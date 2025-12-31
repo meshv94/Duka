@@ -1,5 +1,6 @@
 // API Client for portal
-const API_BASE_URL = 'https://deliveryapp-backend-2spq.onrender.com/api/admin';
+// const API_BASE_URL = 'https://deliveryapp-backend-2spq.onrender.com/api/admin';
+const API_BASE_URL = 'http://localhost:5000/api/admin';
 
 class ApiClient {
   constructor() {
@@ -9,12 +10,20 @@ class ApiClient {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
 
+    // Get admin token from localStorage
+    const token = localStorage.getItem('adminToken');
+
     const config = {
       ...options,
       headers: {
         ...options.headers,
       },
     };
+
+    // Add Authorization header if token exists
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
 
     // Don't set Content-Type for FormData - browser will set it with boundary
     if (!(options.body instanceof FormData)) {
@@ -26,6 +35,12 @@ class ApiClient {
       const data = await response.json();
 
       if (!response.ok) {
+        // If unauthorized, clear token and redirect to login
+        if (response.status === 401) {
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminData');
+          window.location.href = '/login';
+        }
         throw new Error(data.message || 'Something went wrong');
       }
 

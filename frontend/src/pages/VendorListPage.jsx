@@ -539,7 +539,7 @@ const VendorListPage = () => {
               </Fade>
 
               {/* Vendors Grid with Entrance Animations */}
-              <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
+              <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }} justifyContent="center">
                 {filteredVendors.map((vendor, index) => (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={vendor._id || vendor.id}>
                     {/* Animated Wrapper - Adds entrance animation with stagger */}

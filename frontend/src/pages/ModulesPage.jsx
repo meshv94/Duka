@@ -241,7 +241,7 @@ const ModulesPage = () => {
               </Fade>
 
               {/* Modules Grid */}
-              <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
+              <Grid container spacing={{ xs: 2, sm: 3, md: 4 }} justifyContent="center">
                 {modules.map((module, index) => (
                   <Grid item xs={12} sm={6} md={4} key={module._id || index}>
                     <Fade in timeout={600} style={{ transitionDelay: `${index * 100}ms` }}>
@@ -249,6 +249,7 @@ const ModulesPage = () => {
                         elevation={0}
                         sx={{
                           height: '100%',
+                          minHeight: { xs: 280, sm: 320 },
                           borderRadius: 3,
                           border: '2px solid #f0f0f0',
                           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -265,8 +266,11 @@ const ModulesPage = () => {
                             height: '100%',
                             display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'stretch',
-                            p: 4,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center',
+                            p: { xs: 3, sm: 4 },
+                            width: "100%"
                           }}
                         >
                           {module.image ? (

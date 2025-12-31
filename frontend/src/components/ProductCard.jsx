@@ -98,6 +98,8 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
     <Card
       sx={{
         width: '100%',
+        height: '100%',
+        minHeight: { xs: 160, sm: 170 },
         display: 'flex',
         flexDirection: 'row',
         borderRadius: 2,
@@ -106,7 +108,6 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
         backgroundColor: '#fff',
         overflow: 'hidden',
         border: '1px solid #f0f0f0',
-        height: 'auto',
         '&:hover': {
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
           transform: 'translateY(-2px)',

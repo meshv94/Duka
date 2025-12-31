@@ -61,6 +61,7 @@ const vendorRoutes = require('./routes/admin/vendorRoutes');
 const adminUserRoutes = require('./routes/admin/userRoutes');
 const orderRoutes = require('./routes/admin/orderRoutes');
 const dashboardRoutes = require('./routes/admin/dashboardRoutes');
+const adminRoutes = require('./routes/admin/adminRoutes');
 
 // App Routes
 const userRoutes = require('./routes/app/userRoutes');
@@ -76,6 +77,7 @@ app.use('/api/admin', vendorRoutes);
 app.use('/api/admin', adminUserRoutes);
 app.use('/api/admin', orderRoutes);
 app.use('/api/admin', dashboardRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Mount app routes
 app.use('/api/app', userRoutes);

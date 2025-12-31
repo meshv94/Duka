@@ -731,18 +731,23 @@ const Vendors = () => {
         <Typography variant="h4" sx={{ fontWeight: 800, fontSize: { xs: '1.5rem', md: '2.125rem' } }}>
           Vendors Management
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenDialog()}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            textTransform: 'none',
-            fontWeight: 600,
-          }}
-        >
-          Add Vendor
-        </Button>
+        {(() => {
+          const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+          return adminData.role === 'super_admin' && (
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog()}
+              sx={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                textTransform: 'none',
+                fontWeight: 600,
+              }}
+            >
+              Add Vendor
+            </Button>
+          );
+        })()}
       </Box>
 
       {/* Vendors Table */}
@@ -794,12 +799,23 @@ const Vendors = () => {
                       >
                         <InventoryIcon fontSize="small" />
                       </IconButton>
-                      <IconButton size="small" color="info" onClick={() => handleOpenDialog(vendor)} title="Edit Vendor">
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(vendor)} title="Delete Vendor">
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
+                      {(() => {
+                        const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+                        const hasUpdatePermission = adminData.role === 'super_admin' || adminData.permissions?.canUpdateVendor;
+                        return hasUpdatePermission && (
+                          <IconButton size="small" color="info" onClick={() => handleOpenDialog(vendor)} title="Edit Vendor">
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        );
+                      })()}
+                      {(() => {
+                        const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+                        return adminData.role === 'super_admin' && (
+                          <IconButton size="small" color="error" onClick={() => handleDeleteClick(vendor)} title="Delete Vendor">
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        );
+                      })()}
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -1223,34 +1239,42 @@ const Vendors = () => {
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexShrink: 0 }}>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => handleOpenProductForm()}
-              size="small"
-              sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                textTransform: 'none',
-                fontWeight: 600,
-                display: { xs: 'none', sm: 'flex' },
-              }}
-            >
-              Add Product
-            </Button>
-            <IconButton
-              onClick={() => handleOpenProductForm()}
-              sx={{
-                display: { xs: 'flex', sm: 'none' },
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                '&:hover': {
-                  background: 'linear-gradient(135deg, #5568d3 0%, #653a8a 100%)',
-                },
-              }}
-              size="small"
-            >
-              <AddIcon />
-            </IconButton>
+            {(() => {
+              const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+              const hasPermission = adminData.role === 'super_admin' || adminData.permissions?.canManageProducts;
+              return hasPermission && (
+                <>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleOpenProductForm()}
+                    size="small"
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      display: { xs: 'none', sm: 'flex' },
+                    }}
+                  >
+                    Add Product
+                  </Button>
+                  <IconButton
+                    onClick={() => handleOpenProductForm()}
+                    sx={{
+                      display: { xs: 'flex', sm: 'none' },
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      color: 'white',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5568d3 0%, #653a8a 100%)',
+                      },
+                    }}
+                    size="small"
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </>
+              );
+            })()}
             <IconButton onClick={() => setProductsDialog(false)}>
               <CloseIcon />
             </IconButton>
@@ -1268,20 +1292,30 @@ const Vendors = () => {
                 No Products Found
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Add your first product to get started
+                {(() => {
+                  const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+                  const hasPermission = adminData.role === 'super_admin' || adminData.permissions?.canManageProducts;
+                  return hasPermission ? 'Add your first product to get started' : 'No products available for this vendor';
+                })()}
               </Typography>
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => handleOpenProductForm()}
-                sx={{
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                }}
-              >
-                Add Product
-              </Button>
+              {(() => {
+                const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+                const hasPermission = adminData.role === 'super_admin' || adminData.permissions?.canManageProducts;
+                return hasPermission && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => handleOpenProductForm()}
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Add Product
+                  </Button>
+                );
+              })()}
             </Box>
           ) : (
             <TableContainer sx={{ width: '100%', overflowX: 'auto' }}>
@@ -1324,14 +1358,24 @@ const Vendors = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                          <IconButton size="small" color="info" onClick={() => handleOpenProductForm(product)} title="Edit Product">
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                          <IconButton size="small" color="error" onClick={() => handleProductDeleteClick(product)} title="Delete Product">
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Box>
+                        {(() => {
+                          const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+                          const hasPermission = adminData.role === 'super_admin' || adminData.permissions?.canManageProducts;
+                          return hasPermission ? (
+                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                              <IconButton size="small" color="info" onClick={() => handleOpenProductForm(product)} title="Edit Product">
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton size="small" color="error" onClick={() => handleProductDeleteClick(product)} title="Delete Product">
+                                <DeleteIcon fontSize="small" />
+                              </IconButton>
+                            </Box>
+                          ) : (
+                            <Typography variant="caption" color="text.secondary">
+                              No actions
+                            </Typography>
+                          );
+                        })()}
                       </TableCell>
                     </TableRow>
                   ))}

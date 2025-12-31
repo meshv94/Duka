@@ -196,8 +196,16 @@ exports.createVendor = async (req, res) => {
 // Get all vendors
 exports.getAllVendors = async (req, res) => {
   try {
-    const vendors = await Vendor.find().populate('module', 'name');
-    
+    let query = {};
+
+    // If not super admin, filter by assigned vendors
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const vendorIds = req.admin.vendor_ids.map(v => v._id || v);
+      query._id = { $in: vendorIds };
+    }
+
+    const vendors = await Vendor.find(query).populate('module', 'name');
+
     res.status(200).json({
       success: true,
       message: 'Vendors retrieved successfully',
@@ -220,8 +228,19 @@ exports.getVendorById = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === id);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this vendor'
+        });
+      }
+    }
+
     const vendor = await Vendor.findById(id).populate('module', 'name');
-    
+
     if (!vendor) {
       return res.status(404).json({
         success: false,
@@ -250,9 +269,20 @@ exports.updateVendor = async (req, res) => {
   try {
     const { id } = req.params;
 
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === id);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this vendor'
+        });
+      }
+    }
+
     // Validate request body
     const { error, value } = updateVendorSchema.validate(req.body);
-    
+
     if (error) {
       return res.status(400).json({
         success: false,
@@ -352,8 +382,16 @@ exports.getVendorsByModule = async (req, res) => {
   try {
     const { moduleId } = req.params;
 
-    const vendors = await Vendor.find({ module: moduleId }).populate('module', 'name');
-    
+    let query = { module: moduleId };
+
+    // If not super admin, filter by assigned vendors
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const vendorIds = req.admin.vendor_ids.map(v => v._id || v);
+      query._id = { $in: vendorIds };
+    }
+
+    const vendors = await Vendor.find(query).populate('module', 'name');
+
     res.status(200).json({
       success: true,
       message: 'Vendors retrieved successfully',
@@ -380,7 +418,23 @@ exports.createProduct = async (req, res) => {
     const { error, value } = createProductSchema.validate(payload);
     if (error) return res.status(400).json({ success: false, message: error.details[0].message });
 
-    // Optional: verify vendor exists
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === value.vendor_id);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this vendor'
+        });
+      }
+    }
+
+    // Verify vendor exists
+    const vendorExists = await Vendor.findById(value.vendor_id);
+    if (!vendorExists) {
+      return res.status(404).json({ success: false, message: 'Vendor not found' });
+    }
+
     const product = new Product(value);
     const saved = await product.save();
 
@@ -394,7 +448,15 @@ exports.createProduct = async (req, res) => {
 // Get all products
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find().populate('vendor_id', 'name').populate('module_id', 'name');
+    let query = {};
+
+    // If not super admin, filter by assigned vendors
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const vendorIds = req.admin.vendor_ids.map(v => v._id || v);
+      query.vendor_id = { $in: vendorIds };
+    }
+
+    const products = await Product.find(query).populate('vendor_id', 'name').populate('module_id', 'name');
     res.status(200).json({ success: true, message: 'Products retrieved successfully', data: products, count: products.length });
   } catch (err) {
     console.error('Error fetching products:', err);
@@ -408,6 +470,18 @@ exports.getProductById = async (req, res) => {
     const { id } = req.params;
     const product = await Product.findById(id).populate('vendor_id', 'name').populate('module_id', 'name');
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === product.vendor_id._id.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this product'
+        });
+      }
+    }
+
     res.status(200).json({ success: true, message: 'Product retrieved successfully', data: product });
   } catch (err) {
     console.error('Error fetching product:', err);
@@ -420,6 +494,17 @@ exports.getProductsByVendor = async (req, res) => {
   try {
     const vendorId = req.params.id || req.query.vendor_id || req.body.vendor_id;
     if (!vendorId) return res.status(400).json({ success: false, message: 'vendor_id is required' });
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === vendorId);
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this vendor'
+        });
+      }
+    }
 
     // Ensure vendor exists
     const vendor = await Vendor.findById(vendorId);
@@ -445,8 +530,22 @@ exports.updateProduct = async (req, res) => {
     const { error, value } = updateProductSchema.validate(payload);
     if (error) return res.status(400).json({ success: false, message: error.details[0].message });
 
+    // Find product first to check vendor access
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === product.vendor_id.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this product'
+        });
+      }
+    }
+
     const updated = await Product.findByIdAndUpdate(id, value, { new: true, runValidators: true });
-    if (!updated) return res.status(404).json({ success: false, message: 'Product not found' });
 
     res.status(200).json({ success: true, message: 'Product updated successfully', data: updated });
   } catch (err) {
@@ -459,8 +558,23 @@ exports.updateProduct = async (req, res) => {
 exports.deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Find product first to check vendor access
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === product.vendor_id.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this product'
+        });
+      }
+    }
+
     const deleted = await Product.findByIdAndDelete(id);
-    if (!deleted) return res.status(404).json({ success: false, message: 'Product not found' });
     res.status(200).json({ success: true, message: 'Product deleted successfully', data: deleted });
   } catch (err) {
     console.error('Error deleting product:', err);

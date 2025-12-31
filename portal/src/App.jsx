@@ -1,12 +1,16 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+import SuperAdminRoute from './components/SuperAdminRoute';
+import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Orders from './pages/Orders';
 import Vendors from './pages/Vendors';
 import Modules from './pages/Modules';
 import Users from './pages/Users';
+import AdminManagement from './pages/AdminManagement';
 import Settings from './pages/Settings';
 
 // Create Material UI theme
@@ -64,16 +68,48 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/vendors" element={<Vendors />} />
-            <Route path="/modules" element={<Modules />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/settings" element={<Settings />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          {/* Public Route - Login */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Protected Routes - Require Authentication */}
+          <Route
+            path="/*"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={
+                      <SuperAdminRoute>
+                        <Dashboard />
+                      </SuperAdminRoute>
+                    } />
+                    <Route path="/orders" element={<Orders />} />
+                    <Route path="/vendors" element={<Vendors />} />
+                    <Route path="/modules" element={
+                      <SuperAdminRoute>
+                        <Modules />
+                      </SuperAdminRoute>
+                    } />
+                    <Route path="/users" element={
+                      <SuperAdminRoute>
+                        <Users />
+                      </SuperAdminRoute>
+                    } />
+                    <Route path="/admins" element={
+                      <SuperAdminRoute>
+                        <AdminManagement />
+                      </SuperAdminRoute>
+                    } />
+                    <Route path="/settings" element={<Settings />} />
+                    {/* Redirect unknown routes based on role */}
+                    <Route path="*" element={<Navigate to="/orders" replace />} />
+                  </Routes>
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
       </Router>
     </ThemeProvider>
   );

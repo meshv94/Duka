@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Box, AppBar, Toolbar, Typography, Container, IconButton, Badge, Stack, Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton, Divider } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, AppBar, Toolbar, Typography, Container, IconButton, Badge, Stack, Drawer, List, ListItem, ListItemIcon, ListItemText, ListItemButton, Divider, Fade, Zoom } from '@mui/material';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -9,6 +9,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import LogoutIcon from '@mui/icons-material/Logout';
 import CloseIcon from '@mui/icons-material/Close';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useNavigate } from 'react-router-dom';
 import { useCartContext } from '../context/CartContext';
 
@@ -17,6 +18,23 @@ const Layout = ({ children }) => {
   const { getCartTotals } = useCartContext();
   const { totalItems } = getCartTotals();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Handle scroll effect for header
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowScrollTop(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to top function
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const toggleDrawer = (open) => (event) => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
@@ -45,10 +63,15 @@ const Layout = ({ children }) => {
         position="sticky"
         elevation={0}
         sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: scrolled
+            ? 'rgba(102, 126, 234, 0.95)'
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backdropFilter: 'blur(20px)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 4px 24px rgba(102, 126, 234, 0.15)',
+          boxShadow: scrolled
+            ? '0 8px 32px rgba(102, 126, 234, 0.25)'
+            : '0 4px 24px rgba(102, 126, 234, 0.15)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
         <Container maxWidth="lg">
@@ -183,8 +206,10 @@ const Layout = ({ children }) => {
           '& .MuiDrawer-paper': {
             width: { xs: 280, sm: 320 },
             background: 'linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%)',
+            boxShadow: '0 0 40px rgba(0, 0, 0, 0.15)',
           },
         }}
+        transitionDuration={400}
       >
         <Box
           sx={{ width: { xs: 280, sm: 320 } }}
@@ -234,10 +259,14 @@ const Layout = ({ children }) => {
               sx={{
                 py: 2,
                 px: 3,
-                transition: 'all 0.3s ease',
+                borderRadius: '12px',
+                mx: 1,
+                mb: 0.5,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
                   backgroundColor: 'rgba(102, 126, 234, 0.08)',
-                  pl: 4,
+                  transform: 'translateX(8px)',
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.1)',
                 },
               }}
             >
@@ -277,10 +306,14 @@ const Layout = ({ children }) => {
               sx={{
                 py: 2,
                 px: 3,
-                transition: 'all 0.3s ease',
+                borderRadius: '12px',
+                mx: 1,
+                mb: 0.5,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
                   backgroundColor: 'rgba(102, 126, 234, 0.08)',
-                  pl: 4,
+                  transform: 'translateX(8px)',
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.1)',
                 },
               }}
             >
@@ -320,10 +353,14 @@ const Layout = ({ children }) => {
               sx={{
                 py: 2,
                 px: 3,
-                transition: 'all 0.3s ease',
+                borderRadius: '12px',
+                mx: 1,
+                mb: 0.5,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
                   backgroundColor: 'rgba(102, 126, 234, 0.08)',
-                  pl: 4,
+                  transform: 'translateX(8px)',
+                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.1)',
                 },
               }}
             >
@@ -360,10 +397,14 @@ const Layout = ({ children }) => {
               sx={{
                 py: 2,
                 px: 3,
-                transition: 'all 0.3s ease',
+                borderRadius: '12px',
+                mx: 1,
+                mb: 0.5,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': {
                   backgroundColor: 'rgba(239, 83, 80, 0.08)',
-                  pl: 4,
+                  transform: 'translateX(8px)',
+                  boxShadow: '0 4px 12px rgba(239, 83, 80, 0.1)',
                 },
               }}
             >
@@ -400,14 +441,51 @@ const Layout = ({ children }) => {
         {children}
       </Box>
 
+      {/* Scroll to Top Button */}
+      <Zoom in={showScrollTop}>
+        <IconButton
+          onClick={scrollToTop}
+          sx={{
+            position: 'fixed',
+            bottom: { xs: 24, sm: 32 },
+            right: { xs: 16, sm: 24 },
+            zIndex: 1000,
+            width: { xs: 48, sm: 56 },
+            height: { xs: 48, sm: 56 },
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: '#fff',
+            boxShadow: '0 8px 24px rgba(102, 126, 234, 0.4)',
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #5568d3 0%, #653a8a 100%)',
+              transform: 'translateY(-4px) scale(1.05)',
+              boxShadow: '0 12px 32px rgba(102, 126, 234, 0.5)',
+            },
+          }}
+        >
+          <KeyboardArrowUpIcon sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem' } }} />
+        </IconButton>
+      </Zoom>
+
       {/* Footer */}
       <Box
         component="footer"
         sx={{
-          background: 'linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%)',
-          borderTop: '1px solid #e8e8e8',
+          background: 'linear-gradient(to bottom, #ffffff 0%, #f8f9fc 100%)',
+          borderTop: '2px solid transparent',
+          borderImage: 'linear-gradient(to right, transparent, rgba(102, 126, 234, 0.3), transparent) 1',
           py: { xs: 4, sm: 5 },
           mt: 'auto',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '1px',
+            background: 'linear-gradient(to right, transparent, rgba(102, 126, 234, 0.2), transparent)',
+          }
         }}
       >
         <Container maxWidth="lg">
@@ -418,7 +496,7 @@ const Layout = ({ children }) => {
             }}
           >
             {/* Logo Section */}
-            {/* <Box
+            <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
@@ -430,16 +508,16 @@ const Layout = ({ children }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 36,
-                  height: 36,
-                  borderRadius: '10px',
+                  width: 40,
+                  height: 40,
+                  borderRadius: '12px',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)',
+                  boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)',
                 }}
               >
                 <LocalShippingIcon
                   sx={{
-                    fontSize: '1.3rem',
+                    fontSize: '1.4rem',
                     color: '#fff',
                   }}
                 />
@@ -448,7 +526,7 @@ const Layout = ({ children }) => {
                 variant="h6"
                 sx={{
                   fontWeight: 800,
-                  fontSize: '1.1rem',
+                  fontSize: '1.15rem',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
@@ -458,21 +536,21 @@ const Layout = ({ children }) => {
               >
                 DeliveryApp
               </Typography>
-            </Box> */}
+            </Box>
 
             {/* Tagline */}
-            {/* <Typography
+            <Typography
               variant="body2"
               sx={{
                 color: '#666',
                 textAlign: 'center',
                 maxWidth: 500,
-                lineHeight: 1.7,
+                lineHeight: 1.8,
                 fontSize: '0.9rem',
               }}
             >
               Fast, reliable delivery from local vendors. Your favorite meals and products, delivered to your door.
-            </Typography> */}
+            </Typography>
 
             {/* Divider */}
             <Box
@@ -511,7 +589,7 @@ const Layout = ({ children }) => {
                       transform: 'scale(1)',
                     },
                     '25%': {
-                      transform: 'scale(1.1)',
+                      transform: 'scale(1.15)',
                     },
                     '50%': {
                       transform: 'scale(1)',
@@ -519,7 +597,7 @@ const Layout = ({ children }) => {
                   },
                 }}
               />
-              {/* <Typography
+              <Typography
                 variant="body2"
                 sx={{
                   color: '#888',
@@ -527,7 +605,7 @@ const Layout = ({ children }) => {
                 }}
               >
                 for food lovers
-              </Typography> */}
+              </Typography>
             </Stack>
           </Stack>
         </Container>

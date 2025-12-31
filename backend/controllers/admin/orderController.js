@@ -24,6 +24,12 @@ const getAllOrders = async (req, res) => {
     // Build filter object
     const filter = {};
 
+    // Filter by vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const vendorIds = req.admin.vendor_ids.map(v => v._id || v);
+      filter.vendor = { $in: vendorIds };
+    }
+
     // Filter by order date (createdAt)
     if (orderDate) {
       const startDate = new Date(orderDate);
@@ -157,6 +163,17 @@ const getOrderById = async (req, res) => {
       });
     }
 
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === order.vendor._id.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this order',
+        });
+      }
+    }
+
     // Rename address to delivery_address for clarity
     if (order.address) {
       order.delivery_address = order.address;
@@ -211,6 +228,27 @@ const updateOrderStatus = async (req, res) => {
 
     const { status } = value;
 
+    // First find the order to check vendor access
+    const existingOrder = await Cart.findById(id).lean();
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === existingOrder.vendor.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this order',
+        });
+      }
+    }
+
     // Find and update order
     const order = await Cart.findByIdAndUpdate(
       id,
@@ -220,13 +258,6 @@ const updateOrderStatus = async (req, res) => {
       .populate('user', 'name email mobile')
       .populate('vendor', 'name email mobile_number')
       .lean();
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
-      });
-    }
 
     return res.status(200).json({
       success: true,
@@ -258,22 +289,31 @@ const getOrderStats = async (req, res) => {
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
 
+    // Build vendor filter for non-super admins
+    const vendorFilter = {};
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const vendorIds = req.admin.vendor_ids.map(v => v._id || v);
+      vendorFilter.vendor = { $in: vendorIds };
+    }
+
     const stats = {
       // Overall stats
-      totalOrders: await Cart.countDocuments({ status: { $ne: 'New' } }),
+      totalOrders: await Cart.countDocuments({ ...vendorFilter, status: { $ne: 'New' } }),
       totalRevenue: await Cart.aggregate([
-        { $match: { status: { $in: ['Placed', 'Delivered'] } } },
+        { $match: { ...vendorFilter, status: { $in: ['Placed', 'Delivered'] } } },
         { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
       ]).then((result) => result[0]?.total || 0),
 
       // Today's stats
       todayOrders: await Cart.countDocuments({
+        ...vendorFilter,
         createdAt: { $gte: today, $lt: tomorrow },
         status: { $ne: 'New' },
       }),
       todayRevenue: await Cart.aggregate([
         {
           $match: {
+            ...vendorFilter,
             createdAt: { $gte: today, $lt: tomorrow },
             status: { $in: ['Placed', 'Delivered'] },
           },
@@ -281,18 +321,21 @@ const getOrderStats = async (req, res) => {
         { $group: { _id: null, total: { $sum: '$total_payable_amount' } } },
       ]).then((result) => result[0]?.total || 0),
       todayDeliveries: await Cart.countDocuments({
+        ...vendorFilter,
         delivery_date: { $gte: today, $lt: tomorrow },
         status: { $ne: 'New' },
       }),
 
       // This month's stats
       monthOrders: await Cart.countDocuments({
+        ...vendorFilter,
         createdAt: { $gte: monthStart, $lte: monthEnd },
         status: { $ne: 'New' },
       }),
       monthRevenue: await Cart.aggregate([
         {
           $match: {
+            ...vendorFilter,
             createdAt: { $gte: monthStart, $lte: monthEnd },
             status: { $in: ['Placed', 'Delivered'] },
           },
@@ -301,9 +344,9 @@ const getOrderStats = async (req, res) => {
       ]).then((result) => result[0]?.total || 0),
 
       // Status-wise breakdown
-      pendingOrders: await Cart.countDocuments({ status: 'Placed' }),
-      deliveredOrders: await Cart.countDocuments({ status: 'Delivered' }),
-      cancelledOrders: await Cart.countDocuments({ status: 'Cancelled' }),
+      pendingOrders: await Cart.countDocuments({ ...vendorFilter, status: 'Placed' }),
+      deliveredOrders: await Cart.countDocuments({ ...vendorFilter, status: 'Delivered' }),
+      cancelledOrders: await Cart.countDocuments({ ...vendorFilter, status: 'Cancelled' }),
     };
 
     return res.status(200).json({
@@ -337,19 +380,33 @@ const deleteOrder = async (req, res) => {
       });
     }
 
+    // First find the order to check vendor access
+    const existingOrder = await Cart.findById(id).lean();
+
+    if (!existingOrder) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found',
+      });
+    }
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === existingOrder.vendor.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this order',
+        });
+      }
+    }
+
     // Find and update order status to Cancelled
     const order = await Cart.findByIdAndUpdate(
       id,
       { status: 'Cancelled' },
       { new: true }
     );
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found',
-      });
-    }
 
     return res.status(200).json({
       success: true,
@@ -390,6 +447,17 @@ const markAsDelivered = async (req, res) => {
         success: false,
         message: 'Order not found',
       });
+    }
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === order.vendor.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this order',
+        });
+      }
     }
 
     // Check if order can be delivered
@@ -465,6 +533,17 @@ const cancelOrder = async (req, res) => {
         success: false,
         message: 'Order not found',
       });
+    }
+
+    // Check vendor access for non-super admins
+    if (req.admin && req.admin.role !== 'super_admin') {
+      const hasAccess = req.admin.vendor_ids.some(v => (v._id || v).toString() === order.vendor.toString());
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'You do not have access to this order',
+        });
+      }
     }
 
     // Check if order can be cancelled
