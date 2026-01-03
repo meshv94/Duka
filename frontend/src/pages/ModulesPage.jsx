@@ -249,7 +249,7 @@ const ModulesPage = () => {
                         elevation={0}
                         sx={{
                           height: '100%',
-                          width: '18rem',
+                          width: '20rem',
                           minHeight: { xs: 280, sm: 320 },
                           borderRadius: 3,
                           border: '2px solid #f0f0f0',

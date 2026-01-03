@@ -250,6 +250,7 @@ const MyOrdersPage = () => {
                 <Fade in timeout={400 + index * 100}>
                   <Card
                     sx={{
+                      width: '20rem',
                       borderRadius: '16px',
                       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
                       cursor: 'pointer',
