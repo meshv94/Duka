@@ -62,8 +62,8 @@ const VendorCard = ({ vendor }) => {
       <Box
         sx={{
           position: 'relative',
-          width: '100%',
-          height: 200,
+          width: '20rem',
+          height: 250,
           overflow: 'hidden',
           flexShrink: 0,
         }}
@@ -75,7 +75,7 @@ const VendorCard = ({ vendor }) => {
             sx={{
               position: 'absolute',
               top: 20,
-              right: 40,
+              right: 80,
               zIndex: 2,
               '& .MuiBadge-badge': {
                 backgroundColor: '#FF6B6B',

@@ -45,13 +45,15 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
 
   const handleAddClick = (e) => {
     e.stopPropagation();
-    setQuantity(1);
+    const cartQuantityToSet =  cartQuantity ? cartQuantity : 1;
+    setQuantity(cartQuantityToSet);
     setOpenDialog(true);
   };
 
   const handleAddToCart = () => {
     try {
-      addToCart(vendorId, product, quantity);
+      const ItemQuantity = quantity - cartQuantity;
+      addToCart(vendorId, product, ItemQuantity);
       setOpenDialog(false);
       setSnackbar({
         open: true,
@@ -97,7 +99,7 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
   return (
     <Card
       sx={{
-        width: '100%',
+        width: '20rem',
         height: '100%',
         minHeight: { xs: 160, sm: 170 },
         display: 'flex',

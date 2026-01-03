@@ -249,6 +249,7 @@ const ModulesPage = () => {
                         elevation={0}
                         sx={{
                           height: '100%',
+                          width: '18rem',
                           minHeight: { xs: 280, sm: 320 },
                           borderRadius: 3,
                           border: '2px solid #f0f0f0',
@@ -276,8 +277,8 @@ const ModulesPage = () => {
                           {module.image ? (
                             <Box
                               sx={{
-                                width: 100,
-                                height: 100,
+                                width: 150,
+                                height: 150,
                                 borderRadius: '50%',
                                 mb: 3,
                                 overflow: 'hidden',
@@ -298,8 +299,8 @@ const ModulesPage = () => {
                           ) : (
                             <Box
                               sx={{
-                                width: 70,
-                                height: 70,
+                                width: 130,
+                                height: 130,
                                 borderRadius: '50%',
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 display: 'flex',

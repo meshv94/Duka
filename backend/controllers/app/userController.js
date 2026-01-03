@@ -2,6 +2,7 @@ const Joi = require('joi');
 const User = require('../../models/userModal');
 const Cart = require('../../models/cartModal');
 const { generateToken, sendOtpToNumber } = require('../../services/authService');
+const NODE_ENV = process.env.NODE_ENV
 
 // Validation Schemas
 const sendOtpSchema = Joi.object({
@@ -79,14 +80,15 @@ exports.sendOtp = async (req, res) => {
     // Save user
     await user.save();
 
-    // Send OTP to mobile number
-    const otpResult = await sendOtpToNumber(mobile_number, otp);
-
-    if (!otpResult.success) {
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to send OTP. Please try again.'
-      });
+    if (NODE_ENV == 'production') {
+      // Send OTP to mobile number
+      const otpResult = await sendOtpToNumber(mobile_number, otp);
+      if (!otpResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to send OTP. Please try again.'
+        });
+      }
     }
 
     res.status(200).json({
