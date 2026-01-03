@@ -442,7 +442,7 @@ const Layout = ({ children }) => {
       </Box>
 
       {/* Scroll to Top Button */}
-      <Zoom in={showScrollTop}>
+      {/* <Zoom in={showScrollTop}>
         <IconButton
           onClick={scrollToTop}
           sx={{
@@ -465,7 +465,7 @@ const Layout = ({ children }) => {
         >
           <KeyboardArrowUpIcon sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem' } }} />
         </IconButton>
-      </Zoom>
+      </Zoom> */}
 
       {/* Footer */}
       <Box
