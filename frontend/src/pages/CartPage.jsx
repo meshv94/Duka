@@ -626,6 +626,7 @@ const CartPage = () => {
             <Fade in timeout={600} key={order._id}>
               <Card
                 sx={{
+                  width: '100%',
                   mb: { xs: 2, md: 3 },
                   borderRadius: '16px',
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
