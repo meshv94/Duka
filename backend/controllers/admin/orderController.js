@@ -72,7 +72,7 @@ const getAllOrders = async (req, res) => {
     // Fetch orders with population
     const orders = await Cart.find(filter)
       .populate('user', 'name email mobile')
-      .populate('vendor', 'name email mobile_number address')
+      .populate('vendor', 'name email mobile_number address vendor_image')
       .populate('address')
       .populate({
         path: 'items.product',
@@ -148,7 +148,7 @@ const getOrderById = async (req, res) => {
     // Fetch order with full population
     const order = await Cart.findById(id)
       .populate('user', 'name email mobile_number')
-      .populate('vendor', 'name email mobile_number address latitude longitude')
+      .populate('vendor', 'name email mobile_number address latitude longitude vendor_image')
       .populate('address')
       .populate({
         path: 'items.product',
