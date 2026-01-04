@@ -52,7 +52,7 @@ const VendorHeader = ({ vendor }) => {
     (vendor.location ? `${vendor.location.city}, ${vendor.location.country}` : 'Address not available');
 
   // Get banner image URL or use fallback
-  const bannerImage = vendor.vendorBanner || vendor.banner;
+  const bannerImage = vendor.vendor_image || vendor.banner;
   const hasBanner = bannerImage && !bannerError;
 
   // Handle share functionality
@@ -156,7 +156,7 @@ const VendorHeader = ({ vendor }) => {
       </Box>
 
       {/* Banner Section */}
-      {/* <Box
+      <Box
         sx={{
           width: '100%',
           height: { xs: 200, sm: 280, md: 320 },
@@ -248,7 +248,7 @@ const VendorHeader = ({ vendor }) => {
             zIndex: 1,
           }}
         />
-      </Box> */}
+      </Box>
 
       {/* Vendor Info Section */}
       <Box
