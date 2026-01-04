@@ -248,12 +248,14 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
             overflow: 'hidden',
           }}
         >
-          <CardMedia
+          { product.image && <CardMedia
             component="img"
-            image={product.productImage || product.image || FALLBACK_PRODUCT_IMAGE}
-            alt={product.name}
+            image={product.image}
+            alt={""}
             loading="lazy"
             sx={{
+              marginTop: '1rem',
+              borderRadius: '12%',
               width: '100%',
               height: '100%',
               objectFit: 'cover',
@@ -263,10 +265,10 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
                 transform: 'scale(1.1)',
               },
             }}
-          />
+          />}
 
           {/* Special Price Badge - Top of Image */}
-          {hasSpecialPrice && (
+          {/* {hasSpecialPrice && (
             <Box
               sx={{
                 position: 'absolute',
@@ -286,7 +288,7 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
             >
               Sale
             </Box>
-          )}
+          )} */}
         </Box>
 
         {/* Add Button - Below Image */}
@@ -301,7 +303,7 @@ const ProductCard = ({ product, vendorId, onAddClick }) => {
             color: '#fff',
             fontWeight: 700,
             textTransform: 'none',
-            borderRadius: 0,
+            borderRadius: '5%',
             padding: '6px 8px',
             fontSize: '0.7rem',
             boxShadow: 'none',
